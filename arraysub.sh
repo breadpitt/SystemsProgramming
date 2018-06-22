@@ -8,8 +8,10 @@ quotefive="Be happy for this moment. This moment is your life."
 
 QARRAY=("$quoteone", "$quotetwo", "$quotethree", "$quotefour", "$quotefive")
 
+# this for loop made sense to me but bash was not a fan
 #for i in "${QARRAY[@]}"
 #do 
 #	echo ${i//happy/sloppy}
+
 echo ${QARRAY[*]//happy/sloppy}
 unset QARRAY
