@@ -31,16 +31,21 @@ echo $productval
 
 function returnFactorial {
 	
-	if [[ $Z -lt 2 ]]; then
+	if [ "$Z" -eq "1" ]; then
 		echo 1 #stopping condition
-	else
-		echo $(( $Z * $(returnFactorial $(( $Z - 1 )))))
-	fi		
+		return
+	fi	
+		a='expr $Z - 1'
+		b=$(returnFactorial $a)
+		echo $(($Z * $b))
 
 }
 
-factval=$(returnFactorial)
-echo $factval
+echo "$(returnFactorial $Z)"
+#factval=$(returnFactorial)
+#echo $factval
+
+#echo $(returnFactorial)
 
 
 fi
