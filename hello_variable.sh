@@ -1,4 +1,4 @@
-#!./hello_world.sh
+#!/bin/bash
 
 X="Hello"
 Y="World!"

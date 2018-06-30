@@ -1,4 +1,4 @@
-#!./timesleep
+#!/bin/bash	
 
 X=$(date +%s)
 sleep 10

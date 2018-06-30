@@ -1,4 +1,4 @@
-#!./killsleep.sh
+#!/bin/bash
 
 $(sleep 10) &
 

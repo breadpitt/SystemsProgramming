@@ -1,4 +1,4 @@
-#!./read_line.sh
+#!/bin/bash
 
 infile="alice.txt"
 while read line;do 

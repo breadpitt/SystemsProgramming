@@ -1,4 +1,4 @@
-#!./multargs.sh
+#!/bin/bash
 
 X=4
 Y=2

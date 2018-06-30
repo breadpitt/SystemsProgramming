@@ -1,4 +1,5 @@
-#!./stringtest.sh
+#!/bin/bash
+
 
 
 stringuno=$1

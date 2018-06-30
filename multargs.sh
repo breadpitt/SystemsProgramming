@@ -1,4 +1,5 @@
-#!./multargs.sh
+#!/bin/bash
+
 
 X=$1
 Y=$2

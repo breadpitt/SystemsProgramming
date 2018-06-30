@@ -1,4 +1,4 @@
-#!./countfiles.sh
+#!/bin/bash
 
 i=0
 for dir in $(ls);do
