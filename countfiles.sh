@@ -1,7 +1,9 @@
 #!/bin/bash
 
-i=0
-for dir in $(ls);do
-	i++
+count=0;
+lsoutput=$(ls);
+for i in [$lsoutput];
+	do (( count++ ));
 done
-echo $i
+echo $count
+#echo $lsoutput
