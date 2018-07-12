@@ -19,10 +19,11 @@ elif [ -d $2 ]; then
 	echo "That's a directory"
 	#	foundfiles=$(findoutput)
 	foundfiles=$(findfiles)
-	for i in [$foundfiles];
-		do (( count++ ));
+#	for i in [$foundfiles];
+#		do (( count++ ));
+		
 		echo $foundfiles
-	done
+#	done
 
 else
 	echo "Argument 2 is not a valid directory"
