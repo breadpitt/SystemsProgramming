@@ -11,25 +11,25 @@ int hashone(int a, int b, int c, int x)
 
 int hashtwo(int a, int b, int c, int x)
 {
-    int output = ((b + x + c) % a) % 100;
+    int output = ((b * x + a) % c) % 100;
     return output;
 }
 
 int hashthree(int a, int b, int c, int x)
 {
-    int output = (((c * x) + b) % a) % 100;
+    int output = ((c * x + b) % a) % 100;
     return output;
 }
 
 int hashfour(int a, int b, int c, int x)
 {
-    int output = (((c + x )* a) % b) % 100;
+    int output = ((b * x + c) % a) % 100;
     return output;
 }
 
 int hashfive(int a, int b, int c, int x)
 {
-    int output = (((x * a) * b) % c) % 100;
+    int output = ((c * x + a) % b) % 100;
     return output;
 }
 
@@ -76,6 +76,16 @@ std::vector<int> quintuplehash(int a, int b, int c, int e)
 
     return cvector;
 }
+
+// Delete any duplicates from a vector
+std::vector<int> delete_dupes(std::vector<int> collisions){
+    sort( collisions.begin(), collisions.end() );
+            collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
+    return collisions;
+}
+
+
+
 // 3-hash Generate a vector from hashing an element in the query set then generate a vector from hashing an element for every element in the S set.
 // If any number is in both vectors a part or all of a collision has occured.
 std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
@@ -83,6 +93,7 @@ std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
     int e;
 
     std::vector<int> collisions;
+
     int count = 0;
 
     std::vector<int> fpvector = triplehash(a, b, c, fp); // Hash the false positive that was found
@@ -103,10 +114,15 @@ std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
         }
 
         if (count == 3)
-        {
+        {   // Anytime two or more of the hashes from an e in S produced the same value results,
+            // a duplicate e would get added to the collision vector. This removes duplicates.  
+            sort( collisions.begin(), collisions.end() ); 
+            collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
             return collisions;
         }
     }
+    sort( collisions.begin(), collisions.end() );
+    collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
     return collisions; 
 
 }
@@ -118,33 +134,74 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
     int e;
 
     std::vector<int> collisions;
+    std::vector<int> tempvector;
     int count = 0;
 
     std::vector<int> fpvector = quintuplehash(a, b, c, fp); // Hash the false positive that was found
-
+    /*
+    printf("QUERY NUMBER: %d FPVECTOR: [ ", fp);
+    for (int i = 0; i < fpvector.size(); i++)
+    {
+        printf("%d ", fpvector[i]);
+    }
+    printf("]\n");
+    */
     for (int i = 0; i < s.size(); i++)
     {
         e = s[i];
 
         std::vector<int> svector = quintuplehash(a, b, c, e); // Hash an element from S
 
-        for (int j = 0; j < svector.size(); j++) // Iterate over the svector to check for any intersections
-        {
+        std::set_intersection(fpvector.begin(), fpvector.end(), svector.begin(), svector.end(),
+                                                                std::back_inserter(tempvector));
+        // Merge the vectors
+        collisions.insert( collisions.end(), tempvector.begin(), tempvector.end() );
+        // Delete duplicates
+        collisions = delete_dupes(collisions);
+
+        if (collisions.size() > 3){
+            while (collisions.size() < 3){
+                collisions.pop_back();
+            }
+            return collisions;
+        }
+        else if (collisions.size() == 3){
+            return collisions;
+        }
+        /*
+   // printf("SVECTOR %d: [ ", i);
+    /*for (int i = 0; i < svector.size(); i++)
+    {
+        printf("%d ", svector[i]);
+    }
+    printf("]\n");
+    
+       // for (int j = 0; j < svector.size(); j++) // Iterate over the svector to check for any intersections
+        //{
+           // co
             if (std::find(fpvector.begin(), fpvector.end(), svector[j]) != fpvector.end())
             {
                 collisions.push_back(svector[e]);
                 count++;
             }
-        }
+            else {
+                printf("S ELEMENT %d IS UNIQUE \n", e);
+            }
+        //}
 
         if (count == 3)
         {
-            return collisions;
+            sort( collisions.begin(), collisions.end() );
+            collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
+           return collisions;
         }
+        */
     }
+    
     return collisions; 
 
 }
+
 
 
  // Use 3 hash functions
@@ -232,7 +289,7 @@ void three_bloom(){
             printf("\n False Positive at query %d.", q);
             falsepositive++;
             printf(" Collision with elements in S at: ");
-            std::vector<int> fpvector = investigatefp(S, i, a, b, c);
+            std::vector<int> fpvector = investigatefp(S, q, a, b, c);
             for (int j = 0; j < fpvector.size(); j++)
             {
                 printf("%d ", fpvector[j]);
@@ -246,7 +303,7 @@ void three_bloom(){
 }
 
 
-/*
+
 // Use five hash functions
 void five_bloom(){
 
@@ -344,7 +401,7 @@ void five_bloom(){
             printf("\n False Positive at query %d.", q);
             falsepositive++;
             printf(" Collision with elements in S at: ");
-            std::vector<int> fpvector = investigatefpfive(Sf, i, a, b, c);
+            std::vector<int> fpvector = investigatefpfive(Sf, q, a, b, c);
             for (int j = 0; j < fpvector.size(); j++)
             {
                 printf("%d ", fpvector[j]);
@@ -356,11 +413,10 @@ void five_bloom(){
     printf("\n True Negatives: %d \n False Positives: %d \n False Positive Rate: %f\n",
            truenegative, falsepositive, fprate);
 }
-*/
+
 int main()
 {
-    int a;
     three_bloom();
-    //five_bloom();
+    five_bloom();
     return 0;
 }
