@@ -93,6 +93,9 @@ std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
     int e;
 
     std::vector<int> collisions;
+    std::vector<int> tempvector;
+
+
 
     int count = 0;
 
@@ -104,25 +107,26 @@ std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
 
         std::vector<int> svector = triplehash(a, b, c, e); // Hash an element from S
 
-        for (int j = 0; j < svector.size(); j++) // Iterate over the svector to check for any intersections
-        {
-            if (std::find(fpvector.begin(), fpvector.end(), svector[j]) != fpvector.end())
-            {
-                collisions.push_back(svector[j]);
-                count++;
-            }
-        }
+        // Find if there is a collision and if so add it to a vector
+        std::set_intersection(fpvector.begin(), fpvector.end(), svector.begin(), svector.end(),
+                                                                std::back_inserter(tempvector));
+        // Merge the vectors
+        collisions.insert( collisions.end(), tempvector.begin(), tempvector.end() );
+        // Delete duplicates
+        collisions = delete_dupes(collisions);
 
-        if (count == 3)
-        {   // Anytime two or more of the hashes from an e in S produced the same value results,
-            // a duplicate e would get added to the collision vector. This removes duplicates.  
-            sort( collisions.begin(), collisions.end() ); 
-            collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
+        // Ensure at most 3 S set e values get returned
+        if (collisions.size() > 3){
+            while (collisions.size() < 3){
+                collisions.pop_back();
+            }
+            return collisions;
+        }
+        else if (collisions.size() == 3){
             return collisions;
         }
     }
-    sort( collisions.begin(), collisions.end() );
-    collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
+    
     return collisions; 
 
 }
@@ -152,6 +156,7 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
 
         std::vector<int> svector = quintuplehash(a, b, c, e); // Hash an element from S
 
+        // Find if there is a collision and if so add it to a vector
         std::set_intersection(fpvector.begin(), fpvector.end(), svector.begin(), svector.end(),
                                                                 std::back_inserter(tempvector));
         // Merge the vectors
@@ -159,6 +164,7 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
         // Delete duplicates
         collisions = delete_dupes(collisions);
 
+        // Ensure at most 3 S set e values get returned
         if (collisions.size() > 3){
             while (collisions.size() < 3){
                 collisions.pop_back();
@@ -168,34 +174,7 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
         else if (collisions.size() == 3){
             return collisions;
         }
-        /*
-   // printf("SVECTOR %d: [ ", i);
-    /*for (int i = 0; i < svector.size(); i++)
-    {
-        printf("%d ", svector[i]);
-    }
-    printf("]\n");
-    
-       // for (int j = 0; j < svector.size(); j++) // Iterate over the svector to check for any intersections
-        //{
-           // co
-            if (std::find(fpvector.begin(), fpvector.end(), svector[j]) != fpvector.end())
-            {
-                collisions.push_back(svector[e]);
-                count++;
-            }
-            else {
-                printf("S ELEMENT %d IS UNIQUE \n", e);
-            }
-        //}
-
-        if (count == 3)
-        {
-            sort( collisions.begin(), collisions.end() );
-            collisions.erase( unique( collisions.begin(), collisions.end() ), collisions.end() );
-           return collisions;
-        }
-        */
+        
     }
     
     return collisions; 
@@ -205,14 +184,20 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
 
 
  // Use 3 hash functions
-void three_bloom(){
+int three_bloom(int hchoice, int A, int B, int C){
     printf("Three hash bloom filter \n");
- unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // RNG seed
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // RNG seed
     std::default_random_engine rng(seed);
 
     int a = 3298;
     int b = 2390;
     int c = 10203;
+
+    if (hchoice == 2){
+        a = A;
+        b = B;
+        c = C;
+    }
 
     std::vector<int> Universe; // U
     std::vector<int> S;        // set of old passwords I think
@@ -224,7 +209,7 @@ void three_bloom(){
 
     std::shuffle(Universe.begin(), Universe.end(), rng); // Randomly shuffles the elements in the vector
 
-    printf("S is: [");
+    printf("S is: [ ");
     for (int i = 0; i < 25; i++)
     {
         int temp = Universe[i];
@@ -260,6 +245,14 @@ void three_bloom(){
     }
     printf("]");
 
+    int cont;
+    std::cout << "\nPress 1 to continue or 0 to exit \n";
+    std::cin >> cont;
+
+    if (cont == 0){
+        return 1;
+    }
+
     printf("\nQuery Set: [ ");
     for (int i = 0; i < Universe.size(); i++)
     {
@@ -268,8 +261,8 @@ void three_bloom(){
     printf("]");
 
     int q;             // Query element
-    int truenegative;  // Number of queries not in the set
-    int falsepositive; // Number of queries that are in the set that shouldn't be
+    double truenegative;  // Number of queries not in the set
+    double falsepositive; // Number of queries that are in the set that shouldn't be
 
     for (int i = 0; i < Universe.size(); i++)
     {
@@ -297,15 +290,17 @@ void three_bloom(){
         }
     }
 
-    double fprate = double(falsepositive) / truenegative;
-    printf("\n True Negatives: %d \n False Positives: %d \n False Positive Rate: %f \n",
+    double fprate = falsepositive / truenegative;
+    printf("\n True Negatives: %f \n False Positives: %f \n False Positive Rate: %f \n",
            truenegative, falsepositive, fprate);
+
+    return 0;
 }
 
 
 
 // Use five hash functions
-void five_bloom(){
+int five_bloom(int hchoice, int A, int B, int C){
 
     printf("\nFive hash bloom filter \n");
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // RNG seed
@@ -314,6 +309,12 @@ void five_bloom(){
     int a = 3298;
     int b = 2390;
     int c = 10203;
+
+    if (hchoice == 2){
+        a = A;
+        b = B;
+        c = C;
+    }
 
     std::vector<int> Universef; // U
     std::vector<int> Sf;        // set of old passwords I think
@@ -325,7 +326,7 @@ void five_bloom(){
 
     std::shuffle(Universef.begin(), Universef.end(), rng); // Randomly shuffles the elements in the vector
 
-    printf("S is: [");
+    printf("S is: [ ");
     for (int i = 0; i < 25; i++)
     {
         int temp = Universef[i];
@@ -369,6 +370,15 @@ void five_bloom(){
     }
     printf("]");
 
+    int cont;
+    std::cout << "\nPress 1 to continue or 0 to exit \n";
+    std::cin >> cont;
+
+    if (cont == 0){
+        return 1;
+    }
+
+
     printf("\nQuery Set: [ ");
 
     for (int i = 0; i < Universef.size(); i++)
@@ -378,8 +388,8 @@ void five_bloom(){
     printf("]");
 
     int q;             // Query element
-    int truenegative;  // Number of queries not in the set
-    int falsepositive; // Number of queries that are in the set that shouldn't be
+    double truenegative;  // Number of queries not in the set
+    double falsepositive; // Number of queries that are in the set that shouldn't be
 
     for (int i = 0; i < Universef.size(); i++)
     {
@@ -409,14 +419,44 @@ void five_bloom(){
         }
     }
 
-    double fprate = double(falsepositive) / truenegative;
-    printf("\n True Negatives: %d \n False Positives: %d \n False Positive Rate: %f\n",
+    double fprate = falsepositive / truenegative;
+    printf("\n True Negatives: %f \n False Positives: %f \n False Positive Rate: %f\n",
            truenegative, falsepositive, fprate);
+
+    return 0;
 }
 
 int main()
 {
-    three_bloom();
-    five_bloom();
+    int a;
+    int b;
+    int c;
+
+    std::cout << "Press 1 to use hardcoded hash values or 2 to enter your own: \n";
+    int hchoice;
+    std::cin >> hchoice;
+    if (hchoice == 2){
+        std::cout << "Enter a positive value for variable A in the hash functions: \n";
+        std::cin >> a;
+        std::cout << "Enter a positive value for variable B in the hash functions: \n";
+        std::cin >> b;
+        std::cout << "Enter a positive value for variable C in the hash functions: \n";
+        std::cin >> c;
+    }
+    int bfchoice;
+    std::cout << "Press 3 to run the 3-hash bloom filter, 5 to run the 5-hash bloom filter or 8 to run both: \n";
+
+    std::cin >> bfchoice; 
+    if (bfchoice == 3){
+        three_bloom(hchoice, a, b, c);
+
+    }
+    else if (bfchoice == 5){
+        five_bloom(hchoice, a, b, c);
+    }
+    else if (bfchoice == 8){
+    three_bloom(hchoice, a, b, c);
+    five_bloom(hchoice, a, b, c);
+    }
     return 0;
 }
