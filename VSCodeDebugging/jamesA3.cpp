@@ -5,31 +5,31 @@
 
 int hashone(int a, int b, int c, int x)
 {
-    int output = ((a * x + b) % c) % 100;
+    int output = (((a * x + b) % c) % 100);
     return output;
 }
 
 int hashtwo(int a, int b, int c, int x)
 {
-    int output = ((b * x + a) % c) % 100;
+    int output = (((b * x + a) % c) % 100);
     return output;
 }
 
 int hashthree(int a, int b, int c, int x)
 {
-    int output = ((c * x + b) % a) % 100;
+    int output = (((c * x + b) % a) % 100);
     return output;
 }
 
 int hashfour(int a, int b, int c, int x)
 {
-    int output = ((b * x + c) % a) % 100;
+    int output = (((b * x + c) % a) % 100);
     return output;
 }
 
 int hashfive(int a, int b, int c, int x)
 {
-    int output = ((c * x + a) % b) % 100;
+    int output = (((c * x + a) % b) % 100);
     return output;
 }
 
@@ -95,8 +95,6 @@ std::vector<int> investigatefp(std::vector<int> s, int fp, int a, int b, int c)
     std::vector<int> collisions;
     std::vector<int> tempvector;
 
-
-
     int count = 0;
 
     std::vector<int> fpvector = triplehash(a, b, c, fp); // Hash the false positive that was found
@@ -139,17 +137,8 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
 
     std::vector<int> collisions;
     std::vector<int> tempvector;
-    int count = 0;
 
     std::vector<int> fpvector = quintuplehash(a, b, c, fp); // Hash the false positive that was found
-    /*
-    printf("QUERY NUMBER: %d FPVECTOR: [ ", fp);
-    for (int i = 0; i < fpvector.size(); i++)
-    {
-        printf("%d ", fpvector[i]);
-    }
-    printf("]\n");
-    */
     for (int i = 0; i < s.size(); i++)
     {
         e = s[i];
@@ -223,7 +212,7 @@ int three_bloom(int hchoice, int A, int B, int C){
     int kone; // Outputs from hashing e
     int ktwo;
     int kthree;
-    int bfilter[100] = {0}; // Initialize bloom filter to 0
+    int bfilter[100] = { 0 }; // Initialize bloom filter to 0
 
     for (int i = 0; i < S.size(); i++)
     {
@@ -258,36 +247,41 @@ int three_bloom(int hchoice, int A, int B, int C){
     {
         printf("%d ", Universe[i]);
     }
-    printf("]");
+    printf("] SIZE: %d", Universe.size());
 
     int q;             // Query element
     double truenegative;  // Number of queries not in the set
     double falsepositive; // Number of queries that are in the set that shouldn't be
-
+    int hone;
+    int htwo;
+    int hthree;
     for (int i = 0; i < Universe.size(); i++)
     {
         q = Universe[i]; // Select a query
-        // Hash it through each hash function
-        kone = hashone(a, b, c, q);
-        ktwo = hashtwo(a, b, c, q);
-        kthree = hashthree(a, b, c, q);
-        
-        if (bfilter[kone] == 0 || bfilter[ktwo] == 0 || bfilter[kthree] == 0)
-        {
-            truenegative++;
-        }
 
-        if (bfilter[kone] == 1 && bfilter[ktwo] == 1 && bfilter[kthree] == 1)
+        // Hash it through each hash function
+        hone = hashone(a, b, c, q);
+        htwo = hashtwo(a, b, c, q);
+        hthree = hashthree(a, b, c, q);
+        
+        if (bfilter[hone] == 1 && bfilter[htwo] == 1 && bfilter[hthree] == 1)
         {
             printf("\n False Positive at query %d.", q);
-            falsepositive++;
             printf(" Collision with elements in S at: ");
             std::vector<int> fpvector = investigatefp(S, q, a, b, c);
             for (int j = 0; j < fpvector.size(); j++)
             {
                 printf("%d ", fpvector[j]);
             }
+            falsepositive++;
         }
+
+        else if (bfilter[hone] == 0 || bfilter[htwo] == 0 || bfilter[hthree] == 0)
+        {
+            truenegative++;
+        }
+
+        
     }
 
     double fprate = falsepositive / truenegative;
@@ -316,23 +310,23 @@ int five_bloom(int hchoice, int A, int B, int C){
         c = C;
     }
 
-    std::vector<int> Universef; // U
-    std::vector<int> Sf;        // set of old passwords I think
+    std::vector<int> Universe; // U
+    std::vector<int> S;        // set of old passwords I think
 
     for (int i = 0; i < 100; i++)
     {
-        Universef.push_back(i);
+        Universe.push_back(i);
     }
 
-    std::shuffle(Universef.begin(), Universef.end(), rng); // Randomly shuffles the elements in the vector
+    std::shuffle(Universe.begin(), Universe.end(), rng); // Randomly shuffles the elements in the vector
 
     printf("S is: [ ");
     for (int i = 0; i < 25; i++)
     {
-        int temp = Universef[i];
-        Universef.erase(Universef.begin() + i); // Creates the query list
-        Sf.push_back(temp);
-        printf("%d ", Sf[i]);
+        int temp = Universe[i];
+        Universe.erase(Universe.begin() + i); // Creates the query list
+        S.push_back(temp);
+        printf("%d ", S[i]);
     }
     printf("] \n");
 
@@ -345,9 +339,9 @@ int five_bloom(int hchoice, int A, int B, int C){
 
     int bfilter[100] = {0}; // Initialize bloom filter to 0
 
-    for (int i = 0; i < Sf.size(); i++)
+    for (int i = 0; i < S.size(); i++)
     {
-        e = Sf[i]; // Select a password
+        e = S[i]; // Select a password
         // Hash the password through each hash function
         kone = hashone(a, b, c, e);
         ktwo = hashtwo(a, b, c, e);
@@ -381,47 +375,54 @@ int five_bloom(int hchoice, int A, int B, int C){
 
     printf("\nQuery Set: [ ");
 
-    for (int i = 0; i < Universef.size(); i++)
+    for (int i = 0; i < Universe.size(); i++)
     {
-        printf("%d ", Universef[i]);
+        printf("%d ", Universe[i]);
     }
-    printf("]");
+    printf("] SIZE: %d", Universe.size());
 
     int q;             // Query element
-    double truenegative;  // Number of queries not in the set
-    double falsepositive; // Number of queries that are in the set that shouldn't be
-
-    for (int i = 0; i < Universef.size(); i++)
+    double tnegative;  // Number of queries not in the set
+    double fpositive; // Number of queries that are in the set that shouldn't be
+    int hone;
+    int htwo;
+    int hthree;
+    int hfour;
+    int hfive;
+    for (int i = 0; i < Universe.size(); i++)
     {
-        q = Universef[i]; // Select a query
+        q = Universe[i]; // Select a query
         // Hash it through each hash function
-        kone = hashone(a, b, c, q);
-        ktwo = hashtwo(a, b, c, q);
-        kthree = hashthree(a, b, c, q);
-        kfour = hashfour(a,b,c,q);
-        kfive = hashfive(a,b,c,q);
+        hone = hashone(a, b, c, q);
+        htwo = hashtwo(a, b, c, q);
+        hthree = hashthree(a, b, c, q);
+        hfour = hashfour(a,b,c,q);
+        hfive = hashfive(a,b,c,q);
         
-        if (bfilter[kone] == 0 || bfilter[ktwo] == 0 || bfilter[kthree] == 0 || bfilter[kfour] == 0 || bfilter[kfive] == 0)
-        {
-            truenegative++;
-        }
 
-        if (bfilter[kone] == 1 && bfilter[ktwo] == 1 && bfilter[kthree] == 1 && bfilter[kfour] == 1 && bfilter[kfive] == 1)
+        if (bfilter[hone] == 1 && bfilter[htwo] == 1 && bfilter[hthree] == 1 && bfilter[hfour] == 1 && bfilter[hfive] == 1)
         {
             printf("\n False Positive at query %d.", q);
-            falsepositive++;
             printf(" Collision with elements in S at: ");
-            std::vector<int> fpvector = investigatefpfive(Sf, q, a, b, c);
+            std::vector<int> fpvector = investigatefpfive(S, q, a, b, c);
             for (int j = 0; j < fpvector.size(); j++)
             {
                 printf("%d ", fpvector[j]);
             }
+            fpositive++;
         }
+        
+        else if (bfilter[hone] == 0 || bfilter[htwo] == 0 || bfilter[hthree] == 0 || bfilter[hfour] == 0 || bfilter[hfive] == 0)
+        {
+            tnegative++;
+        }
+
+        
     }
 
-    double fprate = falsepositive / truenegative;
+    double fprate = fpositive / tnegative;
     printf("\n True Negatives: %f \n False Positives: %f \n False Positive Rate: %f\n",
-           truenegative, falsepositive, fprate);
+           tnegative, fpositive, fprate);
 
     return 0;
 }
@@ -444,7 +445,7 @@ int main()
         std::cin >> c;
     }
     int bfchoice;
-    std::cout << "Press 3 to run the 3-hash bloom filter, 5 to run the 5-hash bloom filter or 8 to run both: \n";
+    std::cout << "Press 3 to run the 3-hash bloom filter or 5 to run the 5-hash bloom filter: \n";
 
     std::cin >> bfchoice; 
     if (bfchoice == 3){
@@ -454,9 +455,6 @@ int main()
     else if (bfchoice == 5){
         five_bloom(hchoice, a, b, c);
     }
-    else if (bfchoice == 8){
-    three_bloom(hchoice, a, b, c);
-    five_bloom(hchoice, a, b, c);
-    }
+   
     return 0;
 }

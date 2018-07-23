@@ -1,6 +1,6 @@
-#!/usr/local/bin
+#!/usr/local/bin/python3
 
-hw = "Hello World"
+hw = "Hello World!"
 
 print(hw)
 
