@@ -180,20 +180,10 @@ std::vector<int> investigatefpfive(std::vector<int> s, int fp, int a, int b, int
 
  // Use 3 hash functions
 int three_bloom(int hchoice, int A, int B, int C){
-    printf("Three hash bloom filter \n");
-    //unsigned seed = std::chrono::system_clock::now().time_since_epoch().count(); // RNG seed
-    //std::default_random_engine rng(seed);
-    //std::random_device rd;
-    //std::mt19937 g(rd());
-    //srand(time(0));
-    //std::random_device r;
-    //std::seed_seq seed{r(), r(), r(), r(), r(), r(), r(), r()};
-    //std::mt19937 eng(seed);
-    //srand(time(NULL));
-    //auto engine = std::default_random_engine();
+    std::cout << "Three hash bloom filter \n";
     std::random_device rd;
     std::mt19937 g(rd());
-
+    
     int a = 3298;
     int b = 2390;
     int c = 10203;
@@ -263,7 +253,7 @@ int three_bloom(int hchoice, int A, int B, int C){
     {
         printf("%d ", Universe[i]);
     }
-    printf("] SIZE: %d", Universe.size());
+    printf("] SIZE: %lu", Universe.size());
 
     int q;             // Query element
     double truenegative;  // Number of queries not in the set
@@ -397,7 +387,7 @@ int five_bloom(int hchoice, int A, int B, int C){
     {
         printf("%d ", Universe[i]);
     }
-    printf("] SIZE: %d", Universe.size());
+    printf("] SIZE: %lu", Universe.size());
 
     int q;             // Query element
     double tnegative;  // Number of queries not in the set
