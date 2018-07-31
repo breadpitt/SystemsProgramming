@@ -9,4 +9,3 @@ for line in sys.stdin:
     sys.stdout.write("%s" % line)
     sys.stderr.write("%s" % line)
 
-#print(usr_in)
