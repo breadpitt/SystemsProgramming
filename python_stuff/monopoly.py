@@ -99,23 +99,35 @@ class Player:
         self.computer = False
         self.properties = []
         self.position = 0
+        self.total_position = 0
         self.money = 1500
         self.name = name
         self.token = token
+        self.passed_go = False
+        self.landed_go = False
 
     def roll_die(self):
         self.dieone = random.randint(1, 6)
         self.dietwo = random.randint(1, 6)
         self.doubles = False
-        self.total = self.dieone + self.dietwo
+        self.die_return = [] # better than returning a tuple
 
+        self.total = self.dieone + self.dietwo
+        self.die_return.append(self.total)
         if self.dieone == self.dietwo:
             self.doubles == True
-        return self.total  # , self.doubles deal with later for human players
+        self.die_return.append(self.doubles)
+        return self.die_return
 
-    def update_position(self):
-        self.update = self.roll_die()
-        self.position = (self.position + self.update) % 40
+    def update_position(self, dice_result):
+        self.dice_result = dice_result
+        self.position = (self.position + self.dice_result)
+        if self.position > 40:
+            self.passed_go = True # be sure to reset
+            self.position = self.position % 40
+        if self.position == 40:
+            self.landed_go = True # be sure to reset
+            self.position = self.position % 40
 
     def print_player(self):
         print("Player {}: \n Properties: {} \n Board position: {} \n Money: {} \n Token: {} \n ".format(
@@ -129,14 +141,11 @@ class GameState:
         self.player_token = ''
         self.tokens = ['iron', 'doggie', 'top hat', 'cannon',
                        'wheelbarrow', 'battleship', 'thimble', 'race car', 'shoe']
-        self.self.num_comps= 0
+        self.num_comps= 0
         self.error_of_players = 0
         self.total_players = 0
-        #self.playerone
-        #self.playertwo
-        #self.playerthree
-        #self.playerfour
-    # call first
+        self.turn_list = []
+        
 
     def addHPlayers(self):
         while True:
@@ -179,22 +188,23 @@ class GameState:
         for i in range (self.num_players):
             if i == 0:
                 self.playerone = Player(self.player_name, self.player_token)
-                self..append(self.playerone)
+                self.turn_list.append(self.playerone)
                 self.playerone.print_player()
             elif i == 1:
                 self.playertwo = Player(self.player_name, self.player_token)
-                self..append(self.playertwo)
+                self.turn_list.append(self.playertwo)
                 self.playertwo.print_player()
             elif i == 2:
                 self.playerthree = Player(self.player_name, self.player_token)
-                self..append(self.playerthree)
+                self.turn_list.append(self.playerthree)
                 self.playerthree.print_player()
             elif i == 3:
                 self.playerfour = Player(self.player_name, self.player_token)
-                self..append(self.playerfour)
+                self.turn_list.append(self.playerfour)
                 self.playerfour.print_player()
 
     def initCPlayers(self):
+        self.comp_name = ""
         while True:
             self.num_comps = input("How many computer players will be playing? ")
             try:
@@ -202,7 +212,7 @@ class GameState:
                 self.num_comps = int(self.num_comps)
                 self.error_of_players = 4 - self.num_players
                 self.total_players = self.num_comps + self.num_players
-                if self. > 0 and self. < 5:
+                if self.num_comps > 0 and self.num_comps < 5:
                     break
                 else:
                     raise GenErr
@@ -214,102 +224,77 @@ class GameState:
 
         for i in range(self.num_comps):
             # computer name
-            comp_name = random.choice(tokens)
-            tokens.remove(comp_name)
+            self.comp_name = random.choice(self.tokens)
+            self.tokens.remove(self.comp_name)
 
             if i == 0:
-                compone = Player(comp_name, comp_name)
-                self..append(compone)
-                compone.print_player()
+                self.compone = Player(self.comp_name, self.comp_name)
+                self.turn_list.append(self.compone)
+                self.compone.print_player()
             elif i == 1:
-                comptwo = Player(comp_name, comp_name)
-                self..append(comptwo)
-                comptwo.print_player()
+                self.comptwo = Player(self.comp_name, self.comp_name)
+                self.turn_list.append(self.comptwo)
+                self.comptwo.print_player()
             elif i == 2:
-                compthree = Player(comp_name, comp_name)
-                self..append(compthree)
-                compthree.print_player()
+                self.compthree = Player(self.comp_name, self.comp_name)
+                self.turn_list.append(self.compthree)
+                self.compthree.print_player()
             elif i == 3:
-                compfour = Player(comp_name, comp_name)
-                self..append(compfour)
-                compfour.print_player()
+                self.compfour = Player(self.comp_name, self.comp_name)
+                self.turn_list.append(self.compfour)
+                self.compfour.print_player()
 
+    def rollAndMove(self, Player):
+        self.player = Player
 
-
+class PropertyManagement:
+    def __init__(self):
+        
 # Initialize game
-# tokens = ['iron', 'doggie', 'top hat', 'cannon',
- #         'wheelbarrow', 'battleship', 'thimble', 'race car', 'shoe']
-
-self. = []  # use the list index to implement turns
 
 gameboard = GameBoard()
 gamestate = GameState()
+#commenting for testing doo not delete
+#gamestate.addHPlayers()
+#gamestate.nameHPlayers()
+#gamestate.initHPlayers()
+gamestate.initCPlayers()
 
-gamestate.addHPlayers()
-gamestate.nameHPlayers()
-gamestate.initHPlayers()
-# really missing switches rn
-#  if i == 0:
-#     self.playerone = Player(player_name, player_token)
-#    self..append(self.playerone)
-#   self.playerone.print_player()
-# elif i == 1:
-#   self.playertwo = Player(player_name, player_token)
-#  self..append(self.playertwo)
-# self.playertwo.print_player()
-# elif i == 2:
-#    self.playerthree = Player(player_name, player_token)
-#   self..append(self.playerthree)
-#  self.playerthree.print_player()
-# elif i == 3:
-#    self.playerfour = Player(player_name, player_token)
-#   self..append(self.playerfour)
-#  self.playerfour.print_player()
+turn_list = gamestate.turn_list
+for rolling_player in turn_list:
+    doubles_count = 0
+    die_roll = rolling_player.roll_die()
+    rolling_player.update_position(die_roll[0])
+    if die_roll[1] == True:
+        rolling_player.doubles = False # First thing first reset doubles bool
+        print("DOUBLES!")
+        die_roll = rolling_player.roll_die()
+        rolling_player.update_position(die_roll)
+        count += 1
+    if die_roll[1] == True:
+        rolling_player.doubles = False # First thing first reset doubles bool
+        die_roll = rolling_player.roll_die()
+        rolling_player.update_position(die_roll)
+        count += 1
+        print("DOUBLE DOUBLES!!")
+    if die_roll[1] == True:
+        rolling_player.doubles = False # First thing first reset doubles bool
+        die_roll = rolling_player.roll_die()
+        rolling_player.update_position(die_roll)
+        print("TRIPLE DOUBLES!!! GO TO JAIL BUT NOT REALLY THAT IS HARD TO IMPLEMENT")
+        if doubles_count == 2: # 3rd doubles roll break
+            doubles_count = 0
+            continue
+    print("END OF TURN \n")
+    rolling_player.print_player()
 
-# still need to fix this
 
-'''\]
-while True:
-    self.num_comps = input("How many computer players will be playing? ")
-    try:
-        int(self.num_comps)
-        self.num_comps = int(self.num_comps)
-        self.error_of_players = 4 - num_players
-        self. = self.num_comps + num_players
-        if self. > 0 and self. < 5:
-            break
-        else:
-            raise GenErr
-    except ValueError:
-        print("That's a string ")
-    except GenErr:
-        print("Number of players error. Please enter a number between 0 and {}".format(
-            self.error_of_players))
 
-for i in range(self.num_comps):
-    # computer name
-    comp_name = random.choice(tokens)
-    tokens.remove(comp_name)
 
-    if i == 0:
-        compone = Player(comp_name, comp_name)
-        self..append(compone)
-        compone.print_player()
-    elif i == 1:
-        comptwo = Player(comp_name, comp_name)
-        self..append(comptwo)
-        comptwo.print_player()
-    elif i == 2:
-        compthree = Player(comp_name, comp_name)
-        self..append(compthree)
-        compthree.print_player()
-    elif i == 3:
-        compfour = Player(comp_name, comp_name)
-        self..append(compfour)
-        compfour.print_player()
+#print(die)
 
 # need to fix this but test on computer players for now
-
+'''
 compone.update_position()
 compone.print_player()
 
