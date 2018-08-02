@@ -152,6 +152,7 @@ class GameState:
         self.turn_list = []
 
     def add_hplayers(self):
+        print("Monopoly ┬──┬◡ﾉ(° -°ﾉ)")
         while True:
             self.num_players = input(
                 "How many human players will be playing? ")
@@ -208,6 +209,7 @@ class GameState:
                 self.playerfour.print_player()
 
     def init_cplayers(self):
+        print("┬──┬◡ﾉ(° -°ﾉ) (╯°□°）╯︵ ┻━┻")
         self.comp_name = ""
         while True:
             self.num_comps = input(
@@ -281,7 +283,7 @@ class PropertyManagement:
             print("FREE RENT")
             pass
 
-        elif self.current_property['location'] in owned_properties:
+        #elif self.current_property['location'] in owned_properties:
             # for i in turn_list:
              #    if self.current_property['location'] == i. 
 
@@ -308,7 +310,6 @@ gameboard = GameBoard()
 available_properties = GameBoard()
 owned_properties = {}
 players = {}
-#pfadf = PropertyManagement(gameboard)
 
 gamestate = GameState()
 # commenting for testing doo not delete
