@@ -209,7 +209,7 @@ class GameState:
                 self.playerfour.print_player()
 
     def init_cplayers(self):
-        print("┬──┬◡ﾉ(° -°ﾉ) (╯°□°）╯︵ ┻━┻")
+        print("┬──┬◡ﾉ(° -°ﾉ)(put at start) (╯°□°）╯︵ ┻━┻(after asking to flip table - Y) ノ┬─┬ノ ︵ ( \o°o)\ (after asking to flip table - N (you try to flip the table anyway but table flips you)) (╯°□°）╯$ $ $(computer says take my money anytime they buy something)")
         self.comp_name = ""
         while True:
             self.num_comps = input(
