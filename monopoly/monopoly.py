@@ -124,10 +124,10 @@ class Player:
         self.dice_result = dice_result
         self.position = (self.position + self.dice_result)
         if self.position > 40:
-            #self.passed_go = True  # be sure to reset
+            # self.passed_go = True  # be sure to reset
             self.position = self.position % 40
         if self.position == 40:
-            #self.landed_go = True  # be sure to reset
+            # self.landed_go = True  # be sure to reset
             self.money = self.money + 200
             self.position = self.position % 40
 
@@ -210,7 +210,7 @@ class GameState:
 
     def init_cplayers(self):
         print("┬──┬◡ﾉ(° -°ﾉ)(put at start) (╯°□°）╯︵ ┻━┻(after asking to flip table - Y) ノ┬─┬ノ ︵ ( \o°o)\ (after asking to flip table - N (you try to flip the table anyway but table flips you)) (╯°□°）╯$ $ $(computer says take my money anytime they buy something)")
-        self.comp_name = ""
+        self.player_name = ""
         while True:
             self.num_comps = input(
                 "How many computer players will be playing? ")
@@ -231,23 +231,23 @@ class GameState:
 
         for i in range(self.num_comps):
             # computer name
-            self.comp_name = random.choice(self.tokens)
-            self.tokens.remove(self.comp_name)
+            self.player_name = random.choice(self.tokens)
+            self.tokens.remove(self.player_name)
 
             if i == 0:
-                self.compone = Player(self.comp_name, self.comp_name)
+                self.compone = Player(self.player_name, self.player_name)
                 self.turn_list.append(self.compone)
                 self.compone.print_player()
             elif i == 1:
-                self.comptwo = Player(self.comp_name, self.comp_name)
+                self.comptwo = Player(self.player_name, self.player_name)
                 self.turn_list.append(self.comptwo)
                 self.comptwo.print_player()
             elif i == 2:
-                self.compthree = Player(self.comp_name, self.comp_name)
+                self.compthree = Player(self.player_name, self.player_name)
                 self.turn_list.append(self.compthree)
                 self.compthree.print_player()
             elif i == 3:
-                self.compfour = Player(self.comp_name, self.comp_name)
+                self.compfour = Player(self.player_name, self.player_name)
                 self.turn_list.append(self.compfour)
                 self.compfour.print_player()
 
@@ -256,59 +256,68 @@ class GameState:
 
 
 class PropertyManagement:
-    def __init__(self, GameBoard, AvailableProperties, Player, OwnedProperties, Players):
+    def __init__(self, GameBoard, Properties, Player, Players):
         # Actually want these variables to be shared across class instances
-        available_properties = AvailableProperties
-        owned_properties = OwnedProperties
+        available_properties = Properties
+        # owned_properties = Properties
         turn_list = Players
 
         self.no_cost_properties = [2, 7, 10, 17, 20, 22, 30, 33, 36]
-        self.gameboard = GameBoard # could probably share this among class if need be
+        self.gameboard = GameBoard  # could probably share this among class if need be
         self.current_player = Player
         self.current_property = {}
+        self.landlord = ""
 
-    def buy_property(self):      
-        self.current_property = self.gameboard.tiles[self.current_player.position]  # get the property dictionary from the gameboard list at the current player's position
+    def buy_property(self):
+        # get the property dictionary from the gameboard list at the current player's position
+        self.current_property = self.gameboard.tiles[self.current_player.position]
                      # implemts the forced fee spaces & go
         if self.current_property['location'] == 4 or self.current_property['location'] == 38 or self.current_property['location'] == 0:
             if self.current_property['location'] == 0:
-                pass #self.current_player.money = self.current_player.money + 200
+                pass  # self.current_player.money = self.current_player.money + 200
             elif self.current_property['location'] == 4:
                 self.current_player.money = self.current_player.money - 100
             elif self.current_property['location'] == 38:
                 self.current_player.money = self.current_player.money - 200
-
+            
         # Player lands on a rent free / 0 cost property
-        elif self.current_property['location'] in self.no_cost_properties: # 2, 7, 10, 17, 20 22, 30, 33, 36
+        # 2, 7, 10, 17, 20 22, 30, 33, 36
+        elif self.current_property['location'] in self.no_cost_properties:
             print("FREE RENT")
-            pass
-
-        #elif self.current_property['location'] in owned_properties:
-            # for i in turn_list:
-             #    if self.current_property['location'] == i. 
-
-        # for comp players
-        elif self.current_property['cost'] != 0 and int(self.current_property['cost']) < self.current_player.money and self.current_property in available_properties.tiles:
+     
+            
+        elif self.current_property['owner'] != None: #and self.current_property['owner'] != self.current_player.name:
+            self.current_player.money -= int(self.current_property['base_rent'])
+            self.landlord = self.current_property['owner']
+            #print("{} GOT PAID".format(self.landlord))
+            for i in turn_list:
+                if i.name == self.landlord:
+                    i.money += int(self.current_property['base_rent'])
+                    print("{} PAID {} ${} FOR RENT AT {}".format(self.current_player.name, self.landlord, self.current_property['base_rent'], self.current_property['name']))
+            #self.current_player.print_player()
+            
+           
+       
+        elif self.current_property['cost'] != 0 and int(self.current_property['cost']) < self.current_player.money and self.current_property['owner'] == None:
             self.current_player.money = self.current_player.money - int(self.current_property['cost'])
-            self.current_player.properties.append(self.current_property) # add to player profile so they can see what they own
+            self.current_property['owner'] = self.current_player.name
+            # add to player profile so they can see what they own
+            self.current_player.properties.append(self.current_property)
             self.current_player.print_player()
-            owned_properties[self.current_player.name] = self.current_property # key = player name value = dictionary of the property
-            available_properties.tiles.remove(self.current_property)
-           # for i in available_properties.tiles: looks like it's removing properly
-            #    print(i)
+            
 
     def print_owned_properties(self):
-        #for k,v in owned_properties.items():
+        # for k,v in owned_properties.items():
         #    print(k, v)
-        print(owned_properties.items())
+        print(available_properties.items())
 
             
 
 
 # Initialize game
 gameboard = GameBoard()
-available_properties = GameBoard()
-owned_properties = {}
+properties = GameBoard()
+# owned_properties = {}
 players = {}
 
 gamestate = GameState()
@@ -319,14 +328,17 @@ gamestate = GameState()
 gamestate.init_cplayers()
 print("DEBUG")
 turn_list = gamestate.turn_list
-rolling_player = turn_list[0]
-prop_one = PropertyManagement(gameboard, available_properties, rolling_player, owned_properties, turn_list)
-die_roll = rolling_player.roll_die()
-rolling_player.update_position(die_roll[0])
-prop_one.buy_property()
-rolling_player.print_player()
-prop_one.print_owned_properties()
-#prop_one.print_owned_properties()
+for j in range(0, 10):
+    for i in range(0, len(turn_list)):
+        rolling_player = turn_list[i]
+        buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
+        die_roll = rolling_player.roll_die()
+        rolling_player.update_position(die_roll[0])
+        buy_or_rent.buy_property()
+        # rolling_player.print_player()
+        # buy_or_rent.print_owned_properties()
+        print("\n")
+        # buy_or_rent.print_owned_properties()
 '''
 for rolling_player in turn_list:
     doubles_count = 0
