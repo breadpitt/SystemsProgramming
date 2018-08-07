@@ -106,6 +106,7 @@ class Player:
         self.token = token
         self.passed_go = False
         self.landed_go = False
+        self.eliminated = "Alive"
 
     def roll_die(self):
         self.dieone = random.randint(1, 6)
@@ -150,7 +151,13 @@ class GameState:
         self.error_of_players = 0
         self.total_players = 0
         self.turn_list = []
+        self.rq = ""
 
+    def rage_quit(self):
+        self.rq = input("Flip the table? y/n")
+        if self.rq == "y":
+            print("(╯°□°）╯︵ ┻━┻\n")
+            exit()
     def add_hplayers(self):
         print("Monopoly ┬──┬◡ﾉ(° -°ﾉ)")
         while True:
@@ -209,7 +216,7 @@ class GameState:
                 self.playerfour.print_player()
 
     def init_cplayers(self):
-        print("┬──┬◡ﾉ(° -°ﾉ)(put at start) (╯°□°）╯︵ ┻━┻(after asking to flip table - Y) ノ┬─┬ノ ︵ ( \o°o)\ (after asking to flip table - N (you try to flip the table anyway but table flips you)) (╯°□°）╯$ $ $(computer says take my money anytime they buy something)")
+        print("┬──┬◡ﾉ(° -°ﾉ)(put at start) (after asking to flip table - Y) ノ┬─┬ノ ︵ ( \o°o)\ (after asking to flip table - N (you try to flip the table anyway but table flips you)) (╯°□°）╯$ $ $(computer says take my money anytime they buy something)")
         self.player_name = ""
         while True:
             self.num_comps = input(
@@ -253,7 +260,9 @@ class GameState:
 
     def rollAndMove(self, Player):
         self.player = Player
-
+    
+    def get_turn_list(self):
+        return self.turn_list
 
 class PropertyManagement:
     def __init__(self, GameBoard, Properties, Player, Players):
@@ -261,13 +270,16 @@ class PropertyManagement:
         available_properties = Properties
         # owned_properties = Properties
         turn_list = Players
-
+        
         self.no_cost_properties = [2, 7, 10, 17, 20, 22, 30, 33, 36]
         self.gameboard = GameBoard  # could probably share this among class if need be
         self.current_player = Player
         self.current_property = {}
         self.landlord = ""
-
+        self.win_condition = False
+    def print_turn(self):
+        for i in turn_list:
+            print(i)
     def buy_property(self):
         # get the property dictionary from the gameboard list at the current player's position
         self.current_property = self.gameboard.tiles[self.current_player.position]
@@ -283,18 +295,41 @@ class PropertyManagement:
         # Player lands on a rent free / 0 cost property
         # 2, 7, 10, 17, 20 22, 30, 33, 36
         elif self.current_property['location'] in self.no_cost_properties:
-            print("FREE RENT")
+            pass
+            #print("FREE RENT")
      
             
-        elif self.current_property['owner'] != None: #and self.current_property['owner'] != self.current_player.name:
+        elif self.current_property['owner'] != None and self.current_property['owner'] != self.current_player.name:
             self.current_player.money -= int(self.current_property['base_rent'])
             self.landlord = self.current_property['owner']
-            #print("{} GOT PAID".format(self.landlord))
-            for i in turn_list:
-                if i.name == self.landlord:
-                    i.money += int(self.current_property['base_rent'])
-                    print("{} PAID {} ${} FOR RENT AT {}".format(self.current_player.name, self.landlord, self.current_property['base_rent'], self.current_property['name']))
-            #self.current_player.print_player()
+            if self.current_player.money > 0:
+                for p in turn_list:
+                    if p.name == self.landlord:
+                        p.money += int(self.current_property['base_rent'])
+                        print("{} PAID {} ${} FOR RENT AT {}".format(self.current_player.name, self.landlord, self.current_property['base_rent'], self.current_property['name']))
+            else:
+                for p in turn_list:
+                    if p.name == self.landlord:
+                        p.money += self.current_player.money # transfer the remain amount of money
+                        for pwnd in self.current_player.properties:
+                            if pwnd in self.gameboard.tiles:
+                                if pwnd['owner'] == self.current_player.name:
+                                    print("NEW OWNER: {}".format(pwnd['owner']))
+                                    pwnd['owner'] = self.landlord
+                                    p.properties.append(pwnd)
+                                #print(pwnd['owner'])
+                            #print(pwnd['owner'])
+                            #if pwnd['owner'] == self.current_player.name:
+                            #    pwnd['owner'] = self.landlord
+                for d in turn_list:
+                    if d == self.current_player:
+                        # call rage quit here
+                        print("PLAYER {} HAS BEEN ELIMINATED ".format(self.current_player.name))
+                        turn_list.remove(d)
+                    if len(turn_list) == 1:
+                        self.win_condition = True
+                        print("WINNER WINNER CHICKEN DINNER {} WON".format(self.landlord))
+
             
            
        
@@ -303,14 +338,8 @@ class PropertyManagement:
             self.current_property['owner'] = self.current_player.name
             # add to player profile so they can see what they own
             self.current_player.properties.append(self.current_property)
-            self.current_player.print_player()
+           # self.current_player.print_player()
             
-
-    def print_owned_properties(self):
-        # for k,v in owned_properties.items():
-        #    print(k, v)
-        print(available_properties.items())
-
             
 
 
@@ -319,7 +348,7 @@ gameboard = GameBoard()
 properties = GameBoard()
 # owned_properties = {}
 players = {}
-
+turn_list = []
 gamestate = GameState()
 # commenting for testing doo not delete
 # gamestate.add_hplayers()
@@ -327,46 +356,62 @@ gamestate = GameState()
 # gamestate.init_hplayers()
 gamestate.init_cplayers()
 print("DEBUG")
-turn_list = gamestate.turn_list
-for j in range(0, 10):
-    for i in range(0, len(turn_list)):
-        rolling_player = turn_list[i]
-        buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
-        die_roll = rolling_player.roll_die()
-        rolling_player.update_position(die_roll[0])
-        buy_or_rent.buy_property()
-        # rolling_player.print_player()
-        # buy_or_rent.print_owned_properties()
-        print("\n")
-        # buy_or_rent.print_owned_properties()
-'''
-for rolling_player in turn_list:
-    doubles_count = 0
-    die_roll = rolling_player.roll_die()
-    rolling_player.update_position(die_roll[0])
-    
-    if die_roll[1] == True:
-        rolling_player.doubles = False  # First thing first reset doubles bool
-        print("DOUBLES!")
-        die_roll = rolling_player.roll_die()
-        rolling_player.update_position(die_roll)
-        count += 1
-    if die_roll[1] == True:
-        rolling_player.doubles = False  # First thing first reset doubles bool
-        die_roll = rolling_player.roll_die()
-        rolling_player.update_position(die_roll)
-        count += 1
-        print("DOUBLE DOUBLES!!")
-    if die_roll[1] == True:
-        rolling_player.doubles = False  # First thing first reset doubles bool
-        die_roll = rolling_player.roll_die()
-        rolling_player.update_position(die_roll)
-        print("TRIPLE DOUBLES!!! GO TO JAIL BUT NOT REALLY THAT IS HARD TO IMPLEMENT")
-        if doubles_count == 2:  # 3rd doubles roll break
-            doubles_count = 0
-            continue
-    print("END OF TURN \n")
-    rolling_player.print_player()
+turn_list = gamestate.get_turn_list()
+not_elimin_list = turn_list
 
+while True:
+    for rolling_player in turn_list:
+        if rolling_player.money <= 0:
+            continue
+        else:
+            buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
+            
+            die_roll = rolling_player.roll_die()
+            rolling_player.update_position(die_roll[0])
+            buy_or_rent.buy_property()
+            if buy_or_rent.win_condition == True:
+                exit()
+                break
+            print("rolling player: {} money: {}".format(rolling_player.name, rolling_player.money))
+        
+
+    if buy_or_rent.win_condition == True:
+        break
+
+'''
+
+while len(not_elimin_list) > 1:
+    for rolling_player in turn_list:
+        if rolling_player.eliminated == "Alive":
+            buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
+            die_roll = rolling_player.roll_die()
+            rolling_player.update_position(die_roll[0])
+            buy_or_rent.buy_property()
+            print("rolling player: {}".format(rolling_player.name))
+
+
+            if len(turn_list) == 1: 
+                buy_or_rent.print_turn()
+                #print("WINNER WINNER CHICKEN DINNER {}".format(turn_list))   
+            if buy_or_rent.win_condition == True:
+                not_elimin_list.remove(rolling_player)
+                rolling_player.eliminated = "Removed"
+                for i  in not_elimin_list:
+                    print("WINNER WINNER CHICKEN DINNER {}".format(i.name))    
+                #print("WINNER WINNER CHICKEN DINNER {}".format(rolling_player.name)) # break the chains
+                #for i in rolling_player.properties:
+                #    print(i)
+                break
+            
+        elif rolling_player.eliminated == "Dead":
+            not_elimin_list.remove(rolling_player)
+            rolling_player.eliminated = "Removed"
+            for i in not_elimin_list:
+                    print("REMAINING PLAYERS: {}".format(i))
+            continue
+        elif rolling_player.eliminated == "Removed":
+            continue
+    #if buy_or_rent.win_condition == True:
+    #    break
 
 '''
