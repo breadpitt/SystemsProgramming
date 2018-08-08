@@ -277,9 +277,7 @@ class PropertyManagement:
         self.current_property = {}
         self.landlord = ""
         self.win_condition = False
-    def print_turn(self):
-        for i in turn_list:
-            print(i)
+    
     def buy_property(self):
         # get the property dictionary from the gameboard list at the current player's position
         self.current_property = self.gameboard.tiles[self.current_player.position]
@@ -372,7 +370,9 @@ while True:
             if buy_or_rent.win_condition == True:
                 exit()
                 break
-            print("rolling player: {} money: {}".format(rolling_player.name, rolling_player.money))
+            print("rolling player: {} money: {} properties ".format(rolling_player.name, rolling_player.money))
+            for i in rolling_player.properties:
+                print(i)
         
 
     if buy_or_rent.win_condition == True:
