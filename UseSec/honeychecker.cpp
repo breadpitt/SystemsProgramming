@@ -150,15 +150,14 @@ std::string rand_username(void)
 }
 
 ///////////// gen rand pswd
-std::vector<std::string> rand_pswd(int num_honeywords, std::string pswd)
+std::vector<std::string> rand_pswd(int num_honeywords, std::string pswd, std::string sugarword)
 {
     std::random_device rd;
     std::mt19937 g(rd());
 
     int r = rand_digit();
-    std::string sugarword = pswd + std::to_string(r);
     std::vector<std::string> honeyvector;
-    honeyvector.push_back(sugarword);
+    
 
     for (int i = 0; i < num_honeywords - 1; i++)
     {
@@ -168,6 +167,7 @@ std::vector<std::string> rand_pswd(int num_honeywords, std::string pswd)
         honeyvector.push_back(honeyword);
     }
 
+    honeyvector.push_back(sugarword);
     std::shuffle(honeyvector.begin(), honeyvector.end(), g); // Randomly shuffles the elements in the vector
     return honeyvector;
 }
@@ -184,7 +184,10 @@ std::vector<std::vector<std::string> > gen_honeylist(std::vector<std::string> su
         std::string genusername = rand_username();
         honeyusernamevector.push_back(genusername);
         std::string genpassword = rand_username();
-        std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, genpassword);
+        int honeytail = rand_digit();
+        std::string fakesugarword = genpassword + std::to_string(honeytail);
+
+        std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, genpassword, fakesugarword);
 
         for (int i = 0; i < temp_pswdvector.size(); i++)
             {
@@ -259,9 +262,10 @@ int main()
     std::vector<std::string> sugarvector;
     int sugartail = rand_digit();
     std::string sugarword = pswd + std::to_string(sugartail);
+    std::cout << "SUGARWORD IS " << sugarword << "\n";
     std::vector<std::string> honeyindexes_forsugar;
     sugarvector.push_back(username);
-    std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd); // also shuffles where sugarword is in the vector
+    std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd, sugarword); // also shuffles where sugarword is in the vector
     print_vector(temp_pswdvector);
     for (int i =0; i < temp_pswdvector.size(); i++){
             sugarvector.push_back(temp_pswdvector[i]);
@@ -269,6 +273,7 @@ int main()
 
     // constructs a vector of <username, sugarword, hw, ... , sugarindex, ... honeyindex, ...., >
     int sugar_index = rand_digit();
+    std::cout << "INITIAL SUGAR INDEX IS : " << sugar_index << "\n";
     honeyindexes_forsugar = gen_var_randoms(num_honeyaccounts);
     honeyindexes_forsugar.push_back(std::to_string(sugar_index));
     honeyindexes_forsugar = shuffle_vector(honeyindexes_forsugar); // shuffles the sugarindex
@@ -289,7 +294,7 @@ int main()
             std::vector<std::string> tempvector = honeylist[i];
             // print_vector(tempvector);
             userindex << tempvector[0] << ","; // write username to file
-            for (int j = num_honeywords; j < tempvector.size(); j++)
+            for (int j = num_honeywords + 1; j < tempvector.size(); j++)
             {
                 userindex << tempvector[j] << ","; // skip password, write honey indexes
             }
@@ -303,15 +308,61 @@ int main()
     }
     userindex.close();
 
-    // write to F1
+    // write to F2
     std::ofstream hashindex("hashindex.txt");
     for (int i = 0; i < honeylist.size(); i++)
     {
         if (hashindex.is_open())
         {
             std::vector<std::string> tempvector = honeylist[i];
-            hashindex << tempvector[2] << ","; // write  an index to file 2
-            hashindex << tempvector[1] << ","; // write password to file 2
+            /// need to find the sugar index from the honeylist
+            tempvector.erase(tempvector.begin()); // pop username from front for simpler iterating
+            /*
+            for (int x = num_honeywords; x < tempvector.size(); x++){
+            for (int j = num_honeywords + 1; j < tempvector.size(); j++){
+                if (tempvector[j] == std::to_string(sugar_index)){ // sugar index is in this vector so we need to match it
+                    std::cout << "SUGAR INDEX FOUND " << std::to_string(sugar_index) << "\n";
+                    hashindex << tempvector[j] << ",";
+                    print_vector(tempvector);
+                    tempvector.erase(tempvector.begin() + j);
+                    print_vector(tempvector);
+                    for (int k = 1; k <= num_honeywords; k++){ // search for the right password
+                        if (tempvector[k] == sugarword){
+                            std::cout << "IS THIS SUGARWORD???? " << tempvector[k] << "\n";
+                            hashindex << tempvector[k] << "\n";
+                            print_vector(tempvector);
+                            tempvector.erase(tempvector.begin() + k);
+                            print_vector(tempvector);
+                            //hashindex << tempvector[j] << "," << sugar_index;
+                        }
+                    }
+                }
+            }
+            }
+            */   
+            if(std::find(tempvector.begin(), tempvector.end(), sugarword) != tempvector.end()) {
+                    
+                        for (int y = 0; y < tempvector.size(); y ++){
+                            if (tempvector[y]== sugarword){
+                                tempvector.erase(tempvector.begin() + y);
+                            }
+                            if (tempvector[y]== std::to_string(sugar_index)){
+                                tempvector.erase(tempvector.begin() + y);
+                            }                            
+                        }
+
+                        hashindex << std::to_string(sugar_index) << "," << sugarword << "\n";
+                        std::string filler_hw = pswd + std::to_string(rand_digit());
+                        hashindex << std::to_string(rand_digit()) << "," << filler_hw << "\n"; 
+                    } 
+                    
+            // else write honey index and honeyword to file
+            for (int x = num_honeywords + 1; x < tempvector.size(); x++){
+                hashindex << tempvector[x] << ","; //write index to file 2
+                hashindex << tempvector[x - num_honeywords] << "\n";
+            } 
+           // hashindex << tempvector[2] << ","; // write  an index to file 2
+          //  hashindex << tempvector[1] << ","; // write password to file 2
             hashindex << "\n";
         }
         else
@@ -346,20 +397,7 @@ int main()
         tmp_file.close();
     }
     */
-    /*
-
-    std::string create_username = "";
-    std::string create_pswd = "";
-    std::cout << "Create a new account? (y/n)\n";
-    std::string createacc = "";
-    if (createacc == "y" || createacc == "Y"){
-        std::cout << "Enter a username \n";
-        std::cin >> create_username;
-        std::cout << "Enter a password \n";
-        std::cin >> create_pswd;
-    }
-    read a random username from a file
-    */
+    
 
     return 0;
 }
