@@ -161,7 +161,7 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
 
     // constructs a vector of <username, sugarword, hw, ... ,>
     std::vector<std::string> sugarvector;
-    std::cout << "SUGARWORD IS " << sugarword << "\n";
+    //std::cout << "SUGARWORD IS " << sugarword << "\n";
     std::vector<std::string> honeyindexes_forsugar;
     sugarvector.push_back(username);
     std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd, sugarword); // also shuffles where sugarword is in the vector
@@ -407,7 +407,7 @@ int main()
     int num_honeyaccounts = 6; // this too
     std::string sugarword;
     int sugartail = rand_digit();
-    std::cout << "Press 1 to create account, 2 to login \n";
+    std::cout << "Press 1 to create account, 2 to login, 3 to delete account \n";
     std::cin >> option;
 
     if (option == 1)
@@ -434,7 +434,7 @@ int main()
             }
 
             sugarword = pswd + std::to_string(sugartail);
-            std::cout << "Your new password is: " << sugarword;
+            std::cout << "Your new password is: " << sugarword << "\n";
             create_account(userindex, indexpassword, honeychecker, username, pswd, sugarword, num_honeywords, num_honeyaccounts);
         }
     }
@@ -488,6 +488,61 @@ int main()
                 }
             }
         }
+
+    if (option == 3)
+    {
+        std::cout << "Enter your username: \n";
+        std::string username = "username"; // change later
+        std::cin >> username;
+        if ((ret = check_file(userindex_fn, username)) == 1)
+        {
+
+            std::cout << "Enter your password \n";
+            std::string pswd = "";
+            std::cin >> pswd;
+
+            std::vector<std::string> userhoneyindex = get_honeyindex(userindex_fn, username);
+            userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
+
+            for (int i = 0; i < userhoneyindex.size(); i++)
+            {
+                std::vector<std::string> temp_vect;
+                temp_vect.push_back(userhoneyindex[i]);
+                temp_vect.push_back(pswd);
+                ret = check_index(indexpassword_fn, temp_vect); // <index,username>
+
+                if (ret == 0)
+                {
+                    std::cout << "Incorrect password\n";
+                    return 0;
+                }
+
+                if (ret == 1)
+                {
+
+                    // just a formatting shuffle
+                    temp_vect.pop_back();
+                    temp_vect.push_back(username);
+                    temp_vect.push_back(temp_vect[0]);
+                    temp_vect.erase(temp_vect.begin());
+
+                    std::string access = check_honeycheck(honeychecker_fn, temp_vect);
+                    std::cout << access << "\n";
+                    return 0;
+                }
+
+                if (ret == 2)
+                {
+                    std::cout << "Honeypot Alert\n";
+                    return 0;
+                }
+            }
+        }
+
+
+
+
+
         else
         {
             std::cout << "Username not in system \n";

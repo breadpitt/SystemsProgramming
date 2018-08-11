@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
 import random
+import pprint
 
 
 class GenErr(Exception):  # Generic error
@@ -99,6 +100,7 @@ class Player:
     def __init__(self, name, token):
         self.computer = False
         self.properties = []
+        self.horizontal_list = []
         self.position = 0
         self.total_position = 0
         self.money = 1500
@@ -132,6 +134,12 @@ class Player:
             self.money = self.money + 200
             self.position = self.position % 40
 
+    def print_properties(self):
+        for property_dict in self.properties:
+            self.horizontal_list.append(property_dict['name'])
+        print(self.horizontal_list)
+        self.horizontal_list =[]
+
     def print_player(self):
         print("Player {}: \n Properties: {} \n Board position: {} \n Money: {} \n Token: {} \n ".format(
             self.name, self.properties, self.position, self.money, self.token))
@@ -159,7 +167,6 @@ class GameState:
             print("(╯°□°）╯︵ ┻━┻\n")
             exit()
     def add_hplayers(self):
-        print("Monopoly ┬──┬◡ﾉ(° -°ﾉ)")
         while True:
             self.num_players = input(
                 "How many human players will be playing? ")
@@ -216,7 +223,6 @@ class GameState:
                 self.playerfour.print_player()
 
     def init_cplayers(self):
-        print("┬──┬◡ﾉ(° -°ﾉ)(put at start) (after asking to flip table - Y) ノ┬─┬ノ ︵ ( \o°o)\ (after asking to flip table - N (you try to flip the table anyway but table flips you)) (╯°□°）╯$ $ $(computer says take my money anytime they buy something)")
         self.player_name = ""
         while True:
             self.num_comps = input(
@@ -257,13 +263,28 @@ class GameState:
                 self.compfour = Player(self.player_name, self.player_name)
                 self.turn_list.append(self.compfour)
                 self.compfour.print_player()
-
-    def rollAndMove(self, Player):
-        self.player = Player
+        #print("┬──┬◡ﾉ(° -°ﾉ)")
     
-    def get_turn_list(self):
+    def get_turnlist(self):
         return self.turn_list
 
+ # or turn control       
+class TurnControl:
+    def __init__(self, Players, Player):
+        turn_list = Players
+        self.current_player = Player
+
+    def get_turnlist(self):
+        return turn_list
+
+    def update_turnlist(self, turn_list, broke_player):
+        turn_list.remove(broke_player)
+        return turn_list
+
+    def print_turnlist(self):
+        print(turn_list)
+
+    
 class PropertyManagement:
     def __init__(self, GameBoard, Properties, Player, Players):
         # Actually want these variables to be shared across class instances
@@ -276,7 +297,7 @@ class PropertyManagement:
         self.current_player = Player
         self.current_property = {}
         self.landlord = ""
-        self.win_condition = False
+        self.player_eliminated = False
     
     def buy_property(self):
         # get the property dictionary from the gameboard list at the current player's position
@@ -304,7 +325,7 @@ class PropertyManagement:
                 for p in turn_list:
                     if p.name == self.landlord:
                         p.money += int(self.current_property['base_rent'])
-                        print("{} PAID {} ${} FOR RENT AT {}".format(self.current_player.name, self.landlord, self.current_property['base_rent'], self.current_property['name']))
+                        #print("{} PAID {} ${} FOR RENT AT {}".format(self.current_player.name, self.landlord, self.current_property['base_rent'], self.current_property['name']))
             else:
                 for p in turn_list:
                     if p.name == self.landlord:
@@ -312,22 +333,11 @@ class PropertyManagement:
                         for pwnd in self.current_player.properties:
                             if pwnd in self.gameboard.tiles:
                                 if pwnd['owner'] == self.current_player.name:
-                                    print("NEW OWNER: {}".format(pwnd['owner']))
+                                    print("NEW OWNER OF {} IS {}".format(pwnd['name'], self.landlord))
                                     pwnd['owner'] = self.landlord
                                     p.properties.append(pwnd)
-                                #print(pwnd['owner'])
-                            #print(pwnd['owner'])
-                            #if pwnd['owner'] == self.current_player.name:
-                            #    pwnd['owner'] = self.landlord
-                for d in turn_list:
-                    if d == self.current_player:
-                        # call rage quit here
-                        print("PLAYER {} HAS BEEN ELIMINATED ".format(self.current_player.name))
-                        turn_list.remove(d)
-                    if len(turn_list) == 1:
-                        self.win_condition = True
-                        print("WINNER WINNER CHICKEN DINNER {} WON".format(self.landlord))
-
+                self.player_eliminated = True
+                return self.player_eliminated                
             
            
        
@@ -348,70 +358,44 @@ properties = GameBoard()
 players = {}
 turn_list = []
 gamestate = GameState()
-# commenting for testing doo not delete
+print("Welcome to Monopoly")
+
+# commenting for testing do not delete
 # gamestate.add_hplayers()
 # gamestate.name_hplayers()
 # gamestate.init_hplayers()
 gamestate.init_cplayers()
-print("DEBUG")
-turn_list = gamestate.get_turn_list()
-not_elimin_list = turn_list
+turn_list = gamestate.get_turnlist()
+numberofplayers = len(turn_list)
+not_elimin_list = TurnControl(turn_list, turn_list[0])
+eliminated = False
 
-while True:
+#starts the game
+while numberofplayers == len(turn_list) and len(turn_list) > 1:
     for rolling_player in turn_list:
-        if rolling_player.money <= 0:
-            continue
-        else:
-            buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
-            
-            die_roll = rolling_player.roll_die()
-            rolling_player.update_position(die_roll[0])
-            buy_or_rent.buy_property()
-            if buy_or_rent.win_condition == True:
-                exit()
-                break
-            print("rolling player: {} money: {} properties ".format(rolling_player.name, rolling_player.money))
-            for i in rolling_player.properties:
-                print(i)
-        
+        buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
+        die_roll = rolling_player.roll_die()
+        rolling_player.update_position(die_roll[0])
+        eliminated = buy_or_rent.buy_property()
+        if eliminated == True:
+            print("PLAYER {} HAS BEEN ELIMINATED ".format(rolling_player.name))
+            not_elimin_list.update_turnlist(turn_list, rolling_player) # subtract a player from turn list
+            print(len(turn_list))
+            numberofplayers = numberofplayers - 1
+            not_elimin_list = TurnControl(turn_list, turn_list[0])
+            eliminated = False
+       # print("rolling player: {} money: {} properties ".format(rolling_player.name, rolling_player.money))
+        #rolling_player.print_properties()
 
-    if buy_or_rent.win_condition == True:
-        break
+
+
+print("WINNER WINNER CHICKEN DINNER {} WON!".format(turn_list[0].name))
 
 '''
+flip_the_table = "n"
+flip_the_table = input("CELEBRATORY TABLE FLIP? y/n ")
 
-while len(not_elimin_list) > 1:
-    for rolling_player in turn_list:
-        if rolling_player.eliminated == "Alive":
-            buy_or_rent = PropertyManagement(gameboard, properties, rolling_player, turn_list)
-            die_roll = rolling_player.roll_die()
-            rolling_player.update_position(die_roll[0])
-            buy_or_rent.buy_property()
-            print("rolling player: {}".format(rolling_player.name))
-
-
-            if len(turn_list) == 1: 
-                buy_or_rent.print_turn()
-                #print("WINNER WINNER CHICKEN DINNER {}".format(turn_list))   
-            if buy_or_rent.win_condition == True:
-                not_elimin_list.remove(rolling_player)
-                rolling_player.eliminated = "Removed"
-                for i  in not_elimin_list:
-                    print("WINNER WINNER CHICKEN DINNER {}".format(i.name))    
-                #print("WINNER WINNER CHICKEN DINNER {}".format(rolling_player.name)) # break the chains
-                #for i in rolling_player.properties:
-                #    print(i)
-                break
-            
-        elif rolling_player.eliminated == "Dead":
-            not_elimin_list.remove(rolling_player)
-            rolling_player.eliminated = "Removed"
-            for i in not_elimin_list:
-                    print("REMAINING PLAYERS: {}".format(i))
-            continue
-        elif rolling_player.eliminated == "Removed":
-            continue
-    #if buy_or_rent.win_condition == True:
-    #    break
-
+if flip_the_table == "y":
+    print("(ﾉ´･ω･)ﾉ ﾐ ┸━┸")
+    exit()
 '''
