@@ -384,6 +384,11 @@ while numberofplayers == len(turn_list) and len(turn_list) > 1:
             numberofplayers = numberofplayers - 1
             not_elimin_list = TurnControl(turn_list, turn_list[0])
             eliminated = False
+            print("CURRENT STANDINGS ")
+            for i in turn_list:
+                print("Player: {}".format(i.name))
+                i.print_properties()
+            
        # print("rolling player: {} money: {} properties ".format(rolling_player.name, rolling_player.money))
         #rolling_player.print_properties()
 
