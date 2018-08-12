@@ -410,7 +410,97 @@ int check_index(std::string filename, std::vector<std::string> indexpassword)
     Myfile.close();
     return 0; //deny login right away
 }
+int delete_pswd(std::string filename, std::vector<std::string> indexpassword)
+{
+    int offset = 0;
+    std::string line;
+    std::fstream Myfile;
+    std::vector<std::string> writevector;
+    Myfile.open(filename, std::ios_base::in);
 
+    if (Myfile.is_open())
+    {
+        while (getline(Myfile, line))
+        {
+            std::stringstream ss(line);
+            std::string temp;
+
+            std::vector<std::string> honeyvector;
+
+            while (std::getline(ss, temp, ','))
+            {
+                honeyvector.push_back(temp);
+            }
+            
+            if (honeyvector[1] != indexpassword[1]) // check passwords (hash later)
+            {
+                writevector.push_back(honeyvector[0]);
+                writevector.push_back(honeyvector[1]);
+            } 
+        }
+    }
+    Myfile.close();
+    Myfile.open(filename, std::ios::out);
+        for (int i = 0; i < writevector.size(); i++) {
+            if (i % 2 == 0){
+                    Myfile << writevector[i] << ",";
+            }
+            else{
+                    Myfile << writevector[i] << "\n";
+            }
+                }
+                Myfile.close();
+    
+    return 0; //deny login right away
+}
+int update_pswd(std::string filename, std::vector<std::string> indexpassword, std::string newpassword)
+{
+    int offset = 0;
+    std::string line;
+    std::fstream Myfile;
+    std::vector<std::string> writevector;
+    Myfile.open(filename, std::ios_base::in);
+
+    if (Myfile.is_open())
+    {
+        while (getline(Myfile, line))
+        {
+            std::stringstream ss(line);
+            std::string temp;
+
+            std::vector<std::string> honeyvector;
+
+            while (std::getline(ss, temp, ','))
+            {
+                honeyvector.push_back(temp);
+            }
+            
+            if (honeyvector[1] == indexpassword[1]) // check passwords (hash later)
+            {
+                writevector.push_back(honeyvector[0]);
+                honeyvector[1] = newpassword;
+                writevector.push_back(honeyvector[1]);
+            }
+            else {
+                writevector.push_back(honeyvector[0]);
+                writevector.push_back(honeyvector[1]);
+            } 
+        }
+    }
+    Myfile.close();
+    Myfile.open(filename, std::ios::out);
+        for (int i = 0; i < writevector.size(); i++) {
+            if (i % 2 == 0){
+                    Myfile << writevector[i] << ",";
+            }
+            else{
+                    Myfile << writevector[i] << "\n";
+            }
+                }
+                Myfile.close();
+    
+    return 0; //deny login right away
+}
 std::string check_honeycheck(std::string filename, std::vector<std::string> indexusername)
 {
         
@@ -436,7 +526,7 @@ std::string check_honeycheck(std::string filename, std::vector<std::string> inde
 
             if (honeyvector[0] == indexusername[0] && honeyvector[1] == indexusername[1])
             {
-                //return success;
+                return success;
             }
         }
     }
@@ -444,7 +534,7 @@ std::string check_honeycheck(std::string filename, std::vector<std::string> inde
     Myfile.close();
     return fail;
 }
-std::string update_honeycheck(std::string filename, std::vector<std::string> indexusername)
+std::string delete_honeycheck(std::string filename, std::vector<std::string> indexusername)
 {
         print_vector(indexusername);
     int offset = 0;
@@ -465,8 +555,8 @@ std::string update_honeycheck(std::string filename, std::vector<std::string> ind
             {
                 honeyvector.push_back(temp);
             }
-            print_vector(honeyvector);
-            if (honeyvector[1] != indexusername[0])
+            
+            if (honeyvector[1] != indexusername[1])
             {
                 writevector.push_back(honeyvector[0]);
                 writevector.push_back(honeyvector[1]);
@@ -474,7 +564,6 @@ std::string update_honeycheck(std::string filename, std::vector<std::string> ind
         }
     }
     Myfile.close();
-    print_vector(writevector);
     Myfile.open(filename, std::ios::out);
     for (int i = 0; i < writevector.size(); i++) {
         if (i % 2 == 0){
@@ -488,6 +577,7 @@ std::string update_honeycheck(std::string filename, std::vector<std::string> ind
             return success;
             
 }
+
 std::vector<std::string> read_honeypot(std::string filename){
     int offset = 0;
     std::string line;
@@ -538,7 +628,7 @@ int main()
 
     std::vector<std::string> honeypot = read_honeypot(honeypot_fn);
     //print_vector(honeypot);
-    std::cout << "Press 1 to create account, 2 to login, 3 to delete account \n";
+    std::cout << "Press 1 to create account, 2 to login, 3 to delete account, 4 to change your password \n";
     std::cin >> option;
 
     if (option == 1)
@@ -649,7 +739,7 @@ int main()
             std::cin >> pswd;
 
             std::vector<std::string> userhoneyindex = get_honeyindex(userindex_fn, username);
-
+            int uservectorsize = userhoneyindex.size();
             userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
             
             for (int i = 0; i < userhoneyindex.size(); i++)
@@ -657,7 +747,7 @@ int main()
                 std::vector<std::string> temp_vect;
                 temp_vect.push_back(userhoneyindex[i]);
                 temp_vect.push_back(pswd);
-                
+                delete_pswd(indexpassword_fn, temp_vect);
                 // just a formatting shuffle to get <index, username>
                     temp_vect.pop_back();
                     temp_vect.push_back(temp_vect[0]);
@@ -665,28 +755,52 @@ int main()
                     
                     temp_vect.erase(temp_vect.begin());
 
-                update_honeycheck(honeychecker_fn, temp_vect); // <index,username>
+                std::string deleted = delete_honeycheck(honeychecker_fn, temp_vect); // <index,username>
+                std::cout << deleted << "\n";
 
-                /*
-                if (ret == 1)
+                    return 0;
+                }
+               
+            }
+            if (ret == 0)
                 {
-                    for (int j = 0; j < honeypot.size(); j++){
-                        if (username == honeypot[j]){
-                            std::cout << "Honeypot Alert\n";
-                            return 0;
-                        }
-                    }
-                    //check honeypot acc here
-                    // just a formatting shuffle to get <index, username>
-                    temp_vect.pop_back();
-                    temp_vect.push_back(temp_vect[0]);
-                    temp_vect.push_back(username);
-                    
-                    temp_vect.erase(temp_vect.begin());
+                    std::cout << "Incorrect password\n";
+                }
 
-                    std::string access = check_honeycheck(honeychecker_fn, temp_vect);
-                    std::cout << access << "\n";
-                    */
+        else
+        {
+            std::cout << "Username not in system \n";
+            return 1;
+        }
+    
+    }
+
+    if (option == 4)
+    {
+        std::cout << "Enter your username: \n";
+        std::string username = ""; 
+        std::cin >> username;
+        
+        if ((ret = check_file(userindex_fn, username)) == 1)
+        {
+
+            std::cout << "Enter your password \n";
+            std::string pswd = "";
+            std::cin >> pswd;
+            std::cout << "Enter a new password \n";
+            std::string newpswd = "";
+            std::cin >> newpswd;
+            std::vector<std::string> userhoneyindex = get_honeyindex(userindex_fn, username);
+            int uservectorsize = userhoneyindex.size();
+            userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
+            
+            for (int i = 0; i < userhoneyindex.size(); i++)
+            {
+                std::vector<std::string> temp_vect;
+                temp_vect.push_back(userhoneyindex[i]);
+                temp_vect.push_back(pswd);
+                update_pswd(indexpassword_fn, temp_vect, newpswd);
+                std::cout << "Password updated \n";
                     return 0;
                 }
                
