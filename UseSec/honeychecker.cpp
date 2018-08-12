@@ -145,17 +145,22 @@ std::vector<std::vector<std::string> > gen_honeylist(std::vector<std::string> su
         std::string genusername = rand_username();
         honeyusernamevector.push_back(genusername);
         std::string honeypassword = rand_username();
-
-        std::string honeysugarindex = index_basket.back();
-        index_basket.pop_back();
-
-        std::vector<std::string> honeysugarindexes;
-        honeysugarindexes = gen_var_randoms(num_honeyaccounts);
-        honeysugarindexes.push_back(honeysugarindex);
-        honeysugarindexes = shuffle_vector(honeysugarindexes);
+        honeyusernamevector.push_back(honeypassword);
+        int temp_rand_digit = rand_digit() % index_basket.size() + 1;
+        std::string honeysugarindex = index_basket[temp_rand_digit];
+        std::cout << "HONEYSUGARINDEX: " << honeysugarindex << "\n";
         
-        for (int i = 0; i < honeysugarindex.size(); i++){
-            honeyusernamevector.push_back(std::to_string(honeysugarindex[i]));
+
+        std::vector<std::string> honeyindexvector;
+        honeyindexvector = gen_var_randoms(num_honeyaccounts);
+        honeyindexvector.push_back(honeysugarindex);
+        honeyindexvector = shuffle_vector(honeyindexvector);
+        std::cout << "SIZE :" << honeyindexvector.size() << "\n";
+        std::cout << "HONEYSUGAR VECTOR :"; 
+        print_vector(honeyindexvector);
+        for (int i = 0; i < honeyindexvector.size(); i++){
+            honeyusernamevector.push_back(honeyindexvector[i]);
+            std::cout << honeyusernamevector[i] << "\n";
         }
         //honeyusernamevector.push_back(honeypassword);
         //should now have a honey account with a honeysugarword and honeyhoneywords
@@ -237,44 +242,68 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
     }
     std::cout << "sugvect: \n";
     print_vector(sugarvector);
-    /*
-    std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd, sugarword); // also shuffles where sugarword is in the vector
-    std::cout << "HONEYWORDS ARE: ";
-    print_vector(temp_pswdvector);
-    for (int i = 0; i < temp_pswdvector.size(); i++)
-    {
-        sugarvector.push_back(temp_pswdvector[i]);
-    }
     
-     constructs a vector of <username, sugarword, hw, ... , sugarindex, ... honeyindex, ...., >
-    
-    honeyindexes_forsugar = gen_var_randoms(num_honeyaccounts);
-    honeyindexes_forsugar.push_back(sugar_index);
-    honeyindexes_forsugar = shuffle_vector(honeyindexes_forsugar); // shuffles the sugarindex
-    for (int i = 0; i < honeyindexes_forsugar.size(); i++)
+
+    //std::vector<std::vector<std::string> > honeylist(num_honeyaccounts);
+   // honeylist = gen_honeylist(sugarvector, num_honeyaccounts, index_basket);
+
+    //shuffle_vector(honeylist);
+    //shuffle_vector(index_basket);
+    std::vector<std::vector<std::string> > iphoneylist;
+    std::vector<std::string> honey_index;
+
+    for (int i = 0; i < num_honeyaccounts; i++)
     {
-        sugarvector.push_back(honeyindexes_forsugar[i]);
+        std::vector<std::string> honeyusernamevector;
+        std::string genusername = rand_username();
+        honeyusernamevector.push_back(genusername);
+        std::string honeypassword = rand_username();
+        honeyusernamevector.push_back(honeypassword);
+        
+        int temp_rand_digit = rand_digit() % index_basket.size() + 1;
+        std::string honeysugarindex = index_basket[temp_rand_digit];
+        std::cout << "HONEYSUGARINDEX: " << honeysugarindex << "\n";
+        honeyusernamevector.push_back(honeysugarindex);
+        /*
+
+        std::vector<std::string> honeyindexvector;
+        honeyindexvector = gen_var_randoms(num_honeyaccounts);
+        honeyindexvector.push_back(honeysugarindex);
+        honeyindexvector = shuffle_vector(honeyindexvector);
+        std::cout << "SIZE :" << honeyindexvector.size() << "\n";
+        std::cout << "HONEYSUGAR VECTOR :"; 
+        print_vector(honeyindexvector);
+        for (int i = 0; i < honeyindexvector.size(); i++){
+            honeyusernamevector.push_back(honeyindexvector[i]);
+            std::cout << honeyusernamevector[i] << "\n";
+        }
+        
+        */
+
+        iphoneylist.push_back(honeyusernamevector);
+        print_vector(honeyusernamevector);
     }
-    */
+    iphoneylist.push_back(sugarvector);
+    iphoneylist = shuffle_vector(iphoneylist);
 
-    std::vector<std::vector<std::string> > honeylist(num_honeyaccounts);
-    honeylist = gen_honeylist(sugarvector, num_honeyaccounts, index_basket);
-
-    shuffle_vector(honeylist);
-    shuffle_vector(index_basket);
-
-    // write to F1
-    for (int i = 0; i < honeylist.size(); i++)
+    // write to F2
+    for (int i = 0; i < iphoneylist.size(); i++)
     {
-        if (userindex.is_open())
+        if (indexpassword.is_open())
         {
-            std::vector<std::string> tempvector = honeylist[i];
-            userindex << tempvector[0] << ","; // write username to file
-            for (int j = num_honeywords + 1; j < tempvector.size(); j++)
+            std::vector<std::string> tempvector = iphoneylist[i];
+            std::cout << "SIZE OF TEMPVECT: " << tempvector.size() << "\n";
+
+            indexpassword << tempvector[2] << ","; // write sugar/sugarhoney index to file
+            indexpassword << tempvector[1] << "\n"; // write sugar/honey word to file
+            
+            /*
+            for (int j = 2; j < tempvector.size(); j++)
             {
                 userindex << tempvector[j] << ","; // skip password, write honey indexes
             }
             userindex << "\n";
+            */
         }
         else
         {
@@ -282,8 +311,29 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
             return 1;
         }
     }
-    userindex.close();
+    indexpassword.close();
 
+    std::vector<std::vector<std::string> > uihoneylist;
+
+    for (int i = 0 ; i < iphoneylist.size(); i++){
+        if (userindex.is_open()){
+        std::vector<std::string> uitempvector = iphoneylist[i];
+        userindex << uitempvector[0] << ",";
+        std::vector<std::string> honeyindexvector;
+        honeyindexvector = gen_var_randoms(num_honeyaccounts);
+        honeyindexvector.push_back(uitempvector[2]);
+        honeyindexvector = shuffle_vector(honeyindexvector);
+        for (int j = 0; j < honeyindexvector.size(); j++){
+            userindex << honeyindexvector[j] << ",";
+        }
+        userindex << "\n";
+        } else {
+            std::cout << "Error opening userindex file \n";
+            return 1;
+        } 
+    }
+
+/*
     // write to F2
     for (int i = 0; i < honeylist.size(); i++)
     {
@@ -328,6 +378,7 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
         }
     }
     indexpassword.close();
+    */
 }
 
 bool check_file(std::string filename, std::string username)
@@ -568,3 +619,60 @@ int main()
     }
     return 0;
 }
+
+
+/*
+    std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd, sugarword); // also shuffles where sugarword is in the vector
+    std::cout << "HONEYWORDS ARE: ";
+    print_vector(temp_pswdvector);
+    for (int i = 0; i < temp_pswdvector.size(); i++)
+    {
+        sugarvector.push_back(temp_pswdvector[i]);
+    }
+    
+     constructs a vector of <username, sugarword, hw, ... , sugarindex, ... honeyindex, ...., >
+    
+    honeyindexes_forsugar = gen_var_randoms(num_honeyaccounts);
+    honeyindexes_forsugar.push_back(sugar_index);
+    honeyindexes_forsugar = shuffle_vector(honeyindexes_forsugar); // shuffles the sugarindex
+    for (int i = 0; i < honeyindexes_forsugar.size(); i++)
+    {
+        sugarvector.push_back(honeyindexes_forsugar[i]);
+    }
+    */
+
+   //honeyusernamevector.push_back(honeypassword);
+        //should now have a honey account with a honeysugarword and honeyhoneywords
+        /*
+        std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, honeypassword);
+        for (int i = 0; i < temp_pswdvector.size(); i++)
+        {
+            honeyusernamevector.push_back(temp_pswdvector[i]);
+        }
+        
+        for (int i = 0; i < num_honeyaccounts; i++)
+        {
+            honeyusernamevector.push_back(index_basket.back());
+            index_basket.pop_back();
+        }
+        */
+
+        
+        /*
+        // generate a take-a-tail honeypasswords
+
+        //int honeytail = rand_digit();
+        //std::string fakesugarword = genpassword + honeytail);        //std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, genpassword, fakesugarword); 
+
+        for (int i = 0; i < temp_pswdvector.size(); i++)
+        {
+            honeyusernamevector.push_back(temp_pswdvector[i]);
+        }
+        
+       
+        for (int i = 0; i < num_honeyaccounts; i++)
+        {
+            honeyusernamevector.push_back(index_basket.back());
+            index_basket.pop_back();
+        }
+        */
