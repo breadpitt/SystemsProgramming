@@ -206,7 +206,7 @@ std::vector<std::vector<std::string> > gen_honeylist(std::vector<std::string> su
     return honeylist;
 }
 
-int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::ofstream &honeychecker, std::string username, std::string sugarword, int num_honeywords, int num_honeyaccounts)
+std::vector<std::string> create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::ofstream &honeychecker, std::string username, std::string sugarword, int num_honeywords, int num_honeyaccounts, std::vector<std::string> honeypot)
 {
     // create all the random indexs needed
     std::vector<std::string> index_basket;
@@ -225,7 +225,7 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
     std::vector<std::string> honeyindexes_forsugar;
     sugarvector.push_back(username);
     sugarvector.push_back(sugarword);
-    std::string sugar_index = index_basket.back();
+    std::string sugar_index = index_basket.back(); // make sugar index unique
     index_basket.pop_back();
     
     // write sugar index and username to the honeychecker
@@ -240,16 +240,9 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
     {
         sugarvector.push_back(honeyindexes_forsugar[i]);
     }
-    std::cout << "sugvect: \n";
-    print_vector(sugarvector);
     
-
-    //std::vector<std::vector<std::string> > honeylist(num_honeyaccounts);
-   // honeylist = gen_honeylist(sugarvector, num_honeyaccounts, index_basket);
-
-    //shuffle_vector(honeylist);
-    //shuffle_vector(index_basket);
-    std::vector<std::vector<std::string> > iphoneylist;
+    
+    std::vector<std::vector<std::string> > honeylist;
     std::vector<std::string> honey_index;
 
     for (int i = 0; i < num_honeyaccounts; i++)
@@ -257,67 +250,54 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
         std::vector<std::string> honeyusernamevector;
         std::string genusername = rand_username();
         honeyusernamevector.push_back(genusername);
+        honeypot.push_back(genusername); // add to known honeypot
         std::string honeypassword = rand_username();
         honeyusernamevector.push_back(honeypassword);
         
         int temp_rand_digit = rand_digit() % index_basket.size() + 1;
         std::string honeysugarindex = index_basket[temp_rand_digit];
-        std::cout << "HONEYSUGARINDEX: " << honeysugarindex << "\n";
+        //std::cout << "HONEYSUGARINDEX: " << honeysugarindex << "\n";
         honeyusernamevector.push_back(honeysugarindex);
-        /*
 
-        std::vector<std::string> honeyindexvector;
-        honeyindexvector = gen_var_randoms(num_honeyaccounts);
-        honeyindexvector.push_back(honeysugarindex);
-        honeyindexvector = shuffle_vector(honeyindexvector);
-        std::cout << "SIZE :" << honeyindexvector.size() << "\n";
-        std::cout << "HONEYSUGAR VECTOR :"; 
-        print_vector(honeyindexvector);
-        for (int i = 0; i < honeyindexvector.size(); i++){
-            honeyusernamevector.push_back(honeyindexvector[i]);
-            std::cout << honeyusernamevector[i] << "\n";
-        }
-        
-        */
-
-        iphoneylist.push_back(honeyusernamevector);
+        honeylist.push_back(honeyusernamevector);
         print_vector(honeyusernamevector);
     }
-    iphoneylist.push_back(sugarvector);
-    iphoneylist = shuffle_vector(iphoneylist);
+    honeylist.push_back(sugarvector);
+    honeylist = shuffle_vector(honeylist);
 
     // write to F2
-    for (int i = 0; i < iphoneylist.size(); i++)
+    for (int i = 0; i < honeylist.size(); i++)
     {
         if (indexpassword.is_open())
         {
-            std::vector<std::string> tempvector = iphoneylist[i];
-            std::cout << "SIZE OF TEMPVECT: " << tempvector.size() << "\n";
-
+            std::vector<std::string> tempvector = honeylist[i];
+            if (tempvector[0] == username){
+                indexpassword << sugar_index << ",";
+                indexpassword << sugarword << "\n";
+            }
+            else{
             indexpassword << tempvector[2] << ","; // write sugar/sugarhoney index to file
             indexpassword << tempvector[1] << "\n"; // write sugar/honey word to file
-            
-            /*
-            for (int j = 2; j < tempvector.size(); j++)
-            {
-                userindex << tempvector[j] << ","; // skip password, write honey indexes
             }
-            userindex << "\n";
-            */
         }
         else
         {
             std::cout << "Error opening userindex file \n";
-            return 1;
         }
     }
     indexpassword.close();
-
-    std::vector<std::vector<std::string> > uihoneylist;
-
-    for (int i = 0 ; i < iphoneylist.size(); i++){
-        if (userindex.is_open()){
-        std::vector<std::string> uitempvector = iphoneylist[i];
+    // write to f1
+    if (userindex.is_open()){
+    for (int i = 0 ; i < honeylist.size(); i++){
+        
+        std::vector<std::string> uitempvector = honeylist[i];
+        if (uitempvector[0] == username){
+            userindex << uitempvector[0] << ",";
+            for (int j = 2; j < uitempvector.size(); j++){
+                userindex << uitempvector[j] << ",";
+            }
+        }
+        else {
         userindex << uitempvector[0] << ",";
         std::vector<std::string> honeyindexvector;
         honeyindexvector = gen_var_randoms(num_honeyaccounts);
@@ -326,59 +306,17 @@ int create_account(std::ofstream &userindex, std::ofstream &indexpassword, std::
         for (int j = 0; j < honeyindexvector.size(); j++){
             userindex << honeyindexvector[j] << ",";
         }
+        }
         userindex << "\n";
-        } else {
+        }
+        }
+         else {
             std::cout << "Error opening userindex file \n";
-            return 1;
         } 
-    }
+    userindex.close();
 
-/*
-    // write to F2
-    for (int i = 0; i < honeylist.size(); i++)
-    {
-        if (indexpassword.is_open())
-        {
-            std::vector<std::string> tempvector = honeylist[i];
-            /// need to find the sugar index from the honeylist
-            tempvector.erase(tempvector.begin()); // pop username from front for simpler iterating
+    return honeypot;
 
-            if (std::find(tempvector.begin(), tempvector.end(), sugarword) != tempvector.end())
-            {
-
-                for (int y = 0; y < tempvector.size(); y++)
-                {
-                    if (tempvector[y] == sugarword)
-                    {
-                        tempvector.erase(tempvector.begin() + y);
-                    }
-                    if (tempvector[y] == sugar_index)
-                    {
-                        tempvector.erase(tempvector.begin() + y);
-                    }
-                }
-
-                indexpassword << sugar_index << "," << sugarword << "\n";
-                //std::string filler_hw = pswd + rand_digit(); take a tail
-                //indexpassword << rand_digit() << "," << filler_hw << "\n";
-            }
-
-            // else write honey index and honeyword to file
-            for (int x = num_honeywords + 1; x < tempvector.size(); x++)
-            {
-                int temp_rand_digit = rand_digit() % index_basket.size() + 1;
-                indexpassword << index_basket[temp_rand_digit] << ",";
-                indexpassword << tempvector[x - num_honeywords] << "\n";
-            } 
-        }
-        else
-        {
-            std::cout << "Error opening userindex file \n";
-            return 1;
-        }
-    }
-    indexpassword.close();
-    */
 }
 
 bool check_file(std::string filename, std::string username)
@@ -441,7 +379,6 @@ std::vector<std::string> get_honeyindex(std::string filename, std::string userna
 
 int check_index(std::string filename, std::vector<std::string> indexpassword)
 {
-
     int offset = 0;
     std::string line;
     std::ifstream Myfile;
@@ -460,18 +397,14 @@ int check_index(std::string filename, std::vector<std::string> indexpassword)
             {
                 honeyvector.push_back(temp);
             }
-
+            
             if (honeyvector[1] == indexpassword[1]) // check passwords (hash later)
             {
                 if (honeyvector[0] == indexpassword[0])
                 {
                     return 1;
                 }
-                else
-                {
-                    return 2; // honeyword alert
-                }
-            }
+            } 
         }
     }
     Myfile.close();
@@ -480,12 +413,14 @@ int check_index(std::string filename, std::vector<std::string> indexpassword)
 
 std::string check_honeycheck(std::string filename, std::vector<std::string> indexusername)
 {
+        
     int offset = 0;
     std::string line;
     std::ifstream Myfile;
     Myfile.open(filename, std::ios_base::in);
     std::string success = "Access Granted!";
-    std::string fail = "Honeyword Alert";
+    std::string fail = "Honeycheck Fail";
+    std::vector<std::string> honeyvectorz;
     if (Myfile.is_open())
     {
         while (getline(Myfile, line))
@@ -497,17 +432,87 @@ std::string check_honeycheck(std::string filename, std::vector<std::string> inde
             {
                 honeyvector.push_back(temp);
             }
+            
 
             if (honeyvector[0] == indexusername[0] && honeyvector[1] == indexusername[1])
             {
-                return success;
+                //return success;
             }
         }
     }
+   
     Myfile.close();
     return fail;
 }
-
+std::string update_honeycheck(std::string filename, std::vector<std::string> indexusername)
+{
+        print_vector(indexusername);
+    int offset = 0;
+    std::string line;
+    std::fstream Myfile;
+    Myfile.open(filename, std::ios::in);
+    std::string success = "Password Deleted!";
+    std::string fail = "Error";
+    std::vector<std::string> writevector;
+    if (Myfile.is_open())
+    {
+        while (getline(Myfile, line))
+        {
+            std::stringstream ss(line);
+            std::string temp;
+            std::vector<std::string> honeyvector;
+            while (std::getline(ss, temp, ','))
+            {
+                honeyvector.push_back(temp);
+            }
+            print_vector(honeyvector);
+            if (honeyvector[1] != indexusername[0])
+            {
+                writevector.push_back(honeyvector[0]);
+                writevector.push_back(honeyvector[1]);
+            } 
+        }
+    }
+    Myfile.close();
+    print_vector(writevector);
+    Myfile.open(filename, std::ios::out);
+    for (int i = 0; i < writevector.size(); i++) {
+        if (i % 2 == 0){
+                Myfile << writevector[i] << ",";
+        }
+        else{
+                Myfile << writevector[i] << "\n";
+        }
+            }
+            Myfile.close();
+            return success;
+            
+}
+std::vector<std::string> read_honeypot(std::string filename){
+    int offset = 0;
+    std::string line;
+    std::ifstream Myfile;
+    Myfile.open(filename, std::ios_base::in);
+    std::vector<std::string> honeyvector;
+    if (Myfile.is_open())
+    {
+        while (getline(Myfile, line))
+        {
+            std::stringstream ss(line);
+            std::string temp;
+            
+            while (std::getline(ss, temp)) //, ','))
+            {
+                honeyvector.push_back(temp);
+            }
+        }
+    }
+        else {
+            std::cout << "Error opening file. ";
+        }
+    Myfile.close();
+    return honeyvector;
+}
 //////////////// main function
 int main()
 {
@@ -516,11 +521,11 @@ int main()
     std::string userindex_fn = "userindex.txt";
     std::string indexpassword_fn = "indexpassword.txt";
     std::string honeychecker_fn = "honeychecker.txt";
-
+    std::string honeypot_fn = "rockyou.txt";
     std::ofstream userindex(userindex_fn, std::ios::app);         // F1
     std::ofstream indexpassword(indexpassword_fn, std::ios::app); // F2
     std::ofstream honeychecker("honeychecker.txt", std::ios::app);
-
+    
     std::ifstream readuserindex(userindex_fn, std::ios_base::in);
 
     int ret = 0;
@@ -529,6 +534,10 @@ int main()
     int num_honeyaccounts = 6; // this too
     std::string sugarword = "";
     int sugartail = rand_digit();
+    
+
+    std::vector<std::string> honeypot = read_honeypot(honeypot_fn);
+    //print_vector(honeypot);
     std::cout << "Press 1 to create account, 2 to login, 3 to delete account \n";
     std::cin >> option;
 
@@ -542,11 +551,17 @@ int main()
             std::cout << "Error username already exists \n";
             return 1;
         }
+        
         else
         {
+            for (int j = 0; j < honeypot.size(); j++){
+                        if (username == honeypot[j]){
+                            std::cout << "Please pick a 'less sticky' username.\n";
+                            return 1;
+                        }
+            }
 
             std::cout << "Enter a password between 8 and 12 characters in length \n";
-            //std::string sugar = "";
             std::cin >> sugarword;
 
             while (sugarword.length() < 8 || sugarword.length() > 12)
@@ -555,17 +570,16 @@ int main()
                 std::cin >> sugarword;
             }
 
-            // take a tail
-            //sugarword = pswd + sugartail);            //std::cout << "Your new password is: " << sugarword << "\n";
-            create_account(userindex, indexpassword, honeychecker, username, sugarword, num_honeywords, num_honeyaccounts);
+            create_account(userindex, indexpassword, honeychecker, username, sugarword, num_honeywords, num_honeyaccounts, honeypot);
         }
     }
-
+    
     if (option == 2)
     {
         std::cout << "Enter your username: \n";
         std::string username = "username"; // change later
         std::cin >> username;
+        
         if ((ret = check_file(userindex_fn, username)) == 1)
         {
 
@@ -574,8 +588,9 @@ int main()
             std::cin >> pswd;
 
             std::vector<std::string> userhoneyindex = get_honeyindex(userindex_fn, username);
-            userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
 
+            userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
+            
             for (int i = 0; i < userhoneyindex.size(); i++)
             {
                 std::vector<std::string> temp_vect;
@@ -583,32 +598,34 @@ int main()
                 temp_vect.push_back(pswd);
                 ret = check_index(indexpassword_fn, temp_vect); // <index,username>
 
-                if (ret == 0)
-                {
-                    std::cout << "Incorrect password\n";
-                    return 0;
-                }
+                
 
                 if (ret == 1)
                 {
-
+                    for (int j = 0; j < honeypot.size(); j++){
+                        if (username == honeypot[j]){
+                            std::cout << "Honeypot Alert\n";
+                            return 0;
+                        }
+                    }
+                    //check honeypot acc here
                     // just a formatting shuffle to get <index, username>
                     temp_vect.pop_back();
-                    temp_vect.push_back(username);
                     temp_vect.push_back(temp_vect[0]);
+                    temp_vect.push_back(username);
+                    
                     temp_vect.erase(temp_vect.begin());
 
                     std::string access = check_honeycheck(honeychecker_fn, temp_vect);
                     std::cout << access << "\n";
                     return 0;
                 }
-
-                if (ret == 2)
-                {
-                    std::cout << "Honeypot Alert\n";
-                    return 0;
-                }
+               
             }
+            if (ret == 0)
+                {
+                    std::cout << "Incorrect password\n";
+                }
         }
 
         else
@@ -617,62 +634,76 @@ int main()
             return 1;
         }
     }
+
+     if (option == 3)
+    {
+        std::cout << "Enter your username: \n";
+        std::string username = "username"; // change later
+        std::cin >> username;
+        
+        if ((ret = check_file(userindex_fn, username)) == 1)
+        {
+
+            std::cout << "Enter your password \n";
+            std::string pswd = "";
+            std::cin >> pswd;
+
+            std::vector<std::string> userhoneyindex = get_honeyindex(userindex_fn, username);
+
+            userhoneyindex.erase(userhoneyindex.begin()); // pop off the username
+            
+            for (int i = 0; i < userhoneyindex.size(); i++)
+            {
+                std::vector<std::string> temp_vect;
+                temp_vect.push_back(userhoneyindex[i]);
+                temp_vect.push_back(pswd);
+                
+                // just a formatting shuffle to get <index, username>
+                    temp_vect.pop_back();
+                    temp_vect.push_back(temp_vect[0]);
+                    temp_vect.push_back(username);
+                    
+                    temp_vect.erase(temp_vect.begin());
+
+                update_honeycheck(honeychecker_fn, temp_vect); // <index,username>
+
+                /*
+                if (ret == 1)
+                {
+                    for (int j = 0; j < honeypot.size(); j++){
+                        if (username == honeypot[j]){
+                            std::cout << "Honeypot Alert\n";
+                            return 0;
+                        }
+                    }
+                    //check honeypot acc here
+                    // just a formatting shuffle to get <index, username>
+                    temp_vect.pop_back();
+                    temp_vect.push_back(temp_vect[0]);
+                    temp_vect.push_back(username);
+                    
+                    temp_vect.erase(temp_vect.begin());
+
+                    std::string access = check_honeycheck(honeychecker_fn, temp_vect);
+                    std::cout << access << "\n";
+                    */
+                    return 0;
+                }
+               
+            }
+            if (ret == 0)
+                {
+                    std::cout << "Incorrect password\n";
+                }
+
+        else
+        {
+            std::cout << "Username not in system \n";
+            return 1;
+        }
+    
+    }
+
     return 0;
 }
 
-
-/*
-    std::vector<std::string> temp_pswdvector = rand_pswd(num_honeywords, pswd, sugarword); // also shuffles where sugarword is in the vector
-    std::cout << "HONEYWORDS ARE: ";
-    print_vector(temp_pswdvector);
-    for (int i = 0; i < temp_pswdvector.size(); i++)
-    {
-        sugarvector.push_back(temp_pswdvector[i]);
-    }
-    
-     constructs a vector of <username, sugarword, hw, ... , sugarindex, ... honeyindex, ...., >
-    
-    honeyindexes_forsugar = gen_var_randoms(num_honeyaccounts);
-    honeyindexes_forsugar.push_back(sugar_index);
-    honeyindexes_forsugar = shuffle_vector(honeyindexes_forsugar); // shuffles the sugarindex
-    for (int i = 0; i < honeyindexes_forsugar.size(); i++)
-    {
-        sugarvector.push_back(honeyindexes_forsugar[i]);
-    }
-    */
-
-   //honeyusernamevector.push_back(honeypassword);
-        //should now have a honey account with a honeysugarword and honeyhoneywords
-        /*
-        std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, honeypassword);
-        for (int i = 0; i < temp_pswdvector.size(); i++)
-        {
-            honeyusernamevector.push_back(temp_pswdvector[i]);
-        }
-        
-        for (int i = 0; i < num_honeyaccounts; i++)
-        {
-            honeyusernamevector.push_back(index_basket.back());
-            index_basket.pop_back();
-        }
-        */
-
-        
-        /*
-        // generate a take-a-tail honeypasswords
-
-        //int honeytail = rand_digit();
-        //std::string fakesugarword = genpassword + honeytail);        //std::vector<std::string> temp_pswdvector = rand_pswd(num_honeyaccounts, genpassword, fakesugarword); 
-
-        for (int i = 0; i < temp_pswdvector.size(); i++)
-        {
-            honeyusernamevector.push_back(temp_pswdvector[i]);
-        }
-        
-       
-        for (int i = 0; i < num_honeyaccounts; i++)
-        {
-            honeyusernamevector.push_back(index_basket.back());
-            index_basket.pop_back();
-        }
-        */
