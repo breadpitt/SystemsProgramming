@@ -10,6 +10,7 @@ try:
     fo = open(out_file, 'w')
 except FileExistsError:
     print("FNF")
+
 line = fr.readline()
 while line:
     fo.write(line)

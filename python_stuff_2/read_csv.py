@@ -4,10 +4,6 @@ import mycsv
 def main():
     # works but should use with
     path = "pretend_data.csv"
-    #fh = open(path,'r') 
-    #data = mycsv.parse_csv(fh)
-    #for i in data:
-    #    print("Name {} has grade {}".format(i[0], i[1]))
 
     with open(path, 'r') as fh:
         data = mycsv.parse_csv(fh)

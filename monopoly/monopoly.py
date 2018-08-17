@@ -115,15 +115,7 @@ class Player:
         self.dietwo = random.randint(1, 6)
         self.doubles = False
         self.die_return = []  # better than returning a tuple
-        '''
-        self.total = self.dieone + self.dietwo
-        self.die_return.append(self.total)
-        if self.dieone == self.dietwo:
-            print("DOUBLES")
-            self.doubles == True
-            self.die_return.append(self.doubles)
-        self.die_return.append(self.doubles)
-        '''
+        
         self.die_return.append(self.dieone)
         self.die_return.append(self.dietwo)
         return self.die_return
